@@ -1,0 +1,138 @@
+"use client";
+
+import { useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { RefreshCw, X } from "lucide-react";
+import { DataActions } from "@/components/settings/DataActions";
+import { SegmentedSetting } from "@/components/settings/SegmentedSetting";
+import { SettingsRow } from "@/components/settings/SettingsRow";
+import { SettingsSection } from "@/components/settings/SettingsSection";
+import { SettingsToggle } from "@/components/settings/SettingsToggle";
+import { useMoneyMapStore } from "@/store/moneyMapStore";
+import type { CalendarSystem, Currency } from "@/types/money";
+
+function formatRate(value: number | null) {
+  if (!value) return "Not loaded";
+  return `${value.toLocaleString("en-US")} T`;
+}
+
+function formatUpdatedAt(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  const today = new Date();
+  const day = date.toDateString() === today.toDateString() ? "Today" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const time = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${day} ${time}`;
+}
+
+export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const settings = useMoneyMapStore((state) => state.settings);
+  const exchangeRate = useMoneyMapStore((state) => state.exchangeRate);
+  const updateSettings = useMoneyMapStore((state) => state.updateSettings);
+  const fetchExchangeRate = useMoneyMapStore((state) => state.fetchExchangeRate);
+  const shouldAnimate = settings.softAnimations;
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose, open]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 grid place-items-center bg-[#2f333b]/14 px-4 py-10 backdrop-blur-[2px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: shouldAnimate ? 0.16 : 0 }}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) onClose();
+          }}
+        >
+          <motion.section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-title"
+            className="flex max-h-[calc(100vh-80px)] w-[420px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[34px] bg-[#fbfaf7] shadow-[0_30px_80px_rgba(76,74,68,0.2),0_1px_0_rgba(255,255,255,0.85)_inset]"
+            initial={{ opacity: 0, scale: shouldAnimate ? 0.96 : 1, y: shouldAnimate ? 14 : 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: shouldAnimate ? 0.98 : 1, y: shouldAnimate ? 10 : 0 }}
+            transition={{ duration: shouldAnimate ? 0.18 : 0, ease: "easeOut" }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header className="flex items-center justify-between px-5 py-4">
+              <h2 id="settings-title" className="text-[25px] font-semibold leading-none text-[#30333b]">
+                Settings
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="grid size-9 place-items-center rounded-full bg-white text-[#8e92a0] shadow-[inset_0_0_0_1px_#ece8df] transition hover:bg-[#f4f1eb] hover:text-[#626677] active:scale-95"
+                aria-label="Close settings"
+              >
+                <X className="size-5" strokeWidth={2.1} />
+              </button>
+            </header>
+
+            <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+              <SettingsSection title="Currency">
+                <SegmentedSetting<Currency>
+                  value={settings.defaultCurrency}
+                  ariaLabel="Default currency"
+                  options={[
+                    { value: "TOMAN", label: "🇮🇷 Toman" },
+                    { value: "USD", label: "🇺🇸 USD" }
+                  ]}
+                  onChange={(defaultCurrency) => updateSettings({ defaultCurrency })}
+                />
+                <SettingsRow
+                  compact
+                  label={`USD rate: ${formatRate(exchangeRate.usdToToman)}`}
+                  detail={exchangeRate.fetchedAt ? `Updated: ${formatUpdatedAt(exchangeRate.fetchedAt)}` : undefined}
+                >
+                  <button
+                    type="button"
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#6b665d] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7] disabled:opacity-60"
+                    disabled={exchangeRate.isLoading}
+                    onClick={() => void fetchExchangeRate()}
+                  >
+                    <RefreshCw className={`size-3.5 ${exchangeRate.isLoading ? "animate-spin" : ""}`} strokeWidth={2.1} />
+                    Refresh
+                  </button>
+                </SettingsRow>
+              </SettingsSection>
+
+              <SettingsSection title="Calendar">
+                <SegmentedSetting<CalendarSystem>
+                  value={settings.calendarSystem}
+                  ariaLabel="Calendar system"
+                  options={[
+                    { value: "shamsi", label: "Shamsi" },
+                    { value: "gregorian", label: "Gregorian" }
+                  ]}
+                  onChange={(calendarSystem) => updateSettings({ calendarSystem })}
+                />
+              </SettingsSection>
+
+              <SettingsSection title="Canvas">
+                <SettingsToggle label="Show canvas dots" checked={settings.showCanvasDots} onChange={(showCanvasDots) => updateSettings({ showCanvasDots })} />
+                <SettingsToggle label="Soft animations" checked={settings.softAnimations} onChange={(softAnimations) => updateSettings({ softAnimations })} />
+              </SettingsSection>
+
+              <SettingsSection title="Data">
+                <DataActions />
+              </SettingsSection>
+            </div>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
