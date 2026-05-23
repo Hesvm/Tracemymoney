@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -28,9 +29,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     setStep(error ? "error" : "sent");
   }
 
-return (
+  return createPortal(
     <div
-      className="fixed top-0 left-0 z-50 flex h-screen w-screen items-center justify-center px-4 bg-black/20 backdrop-blur-sm"
+      className="fixed top-0 left-0 z-[200] flex h-screen w-screen items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="relative w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl" style={{ maxHeight: "90dvh" }}>
@@ -80,7 +82,7 @@ return (
               </button>
             </form>
 
-{step === "error" && (
+            {step === "error" && (
               <p className="mt-3 text-center text-[13px] text-[#c64141]">
                 Something went wrong. Please try again.
               </p>
@@ -88,6 +90,7 @@ return (
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
