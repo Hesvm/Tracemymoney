@@ -20,7 +20,7 @@ export function AppToast() {
             transition={{ duration: 0.18, ease: "easeOut" }}
             className="pointer-events-auto flex items-center gap-2.5 rounded-full bg-white px-4 py-2.5 shadow-dock whitespace-nowrap"
           >
-            <span className="size-1.5 shrink-0 rounded-full bg-[#c64141]" />
+            <span className={`size-1.5 shrink-0 rounded-full ${toast.type === "success" ? "bg-[#2d7f36]" : toast.type === "info" ? "bg-[#3d7fbf]" : "bg-[#c64141]"}`} />
             <span className="text-[13px] font-medium text-[#30333b]">{toast.message}</span>
             <button
               type="button"

@@ -24,15 +24,22 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     e.preventDefault();
     if (!email.trim()) return;
     setStep("loading");
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (error) {
-      setErrorMsg(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) {
+        console.error("Auth error:", error);
+        setErrorMsg(error.message || error.code || "Something went wrong. Please try again.");
+        setStep("error");
+      } else {
+        setStep("sent");
+      }
+    } catch (err) {
+      console.error("Auth exception:", err);
+      setErrorMsg(err instanceof Error ? err.message : "Network error. Please try again.");
       setStep("error");
-    } else {
-      setStep("sent");
     }
   }
 

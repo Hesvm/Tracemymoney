@@ -1,7 +1,19 @@
 import type { MoneyFlowEdge, MoneyFlowNode, MoneyItem } from "@/types/money";
 import { MarkerType } from "@xyflow/react";
 
-const createdAt = "2026-05-20T08:00:00.000Z";
+function currentMonthDate(day: number): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(Math.min(day, 28)).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+const createdAt = new Date().toISOString();
+const d1 = currentMonthDate(1);
+const d5 = currentMonthDate(5);
+const d10 = currentMonthDate(10);
+const d15 = currentMonthDate(15);
 
 export const initialItems: MoneyItem[] = [
   {
@@ -9,38 +21,58 @@ export const initialItems: MoneyItem[] = [
     title: "Salary",
     type: "income",
     amount: { amount: 60000000, currency: "TOMAN", convertedAmount: 300, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
+    date: d1,
     recurrence: "monthly",
     createdAt,
     updatedAt: createdAt
   },
-  ...Array.from({ length: 4 }, (_, index) => ({
-    id: `item-income-${index + 2}`,
-    title: "",
-    type: "income" as const,
-    amount: { amount: 60000000, currency: "TOMAN" as const, convertedAmount: 300, convertedCurrency: "USD" as const, exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
-    recurrence: "none" as const,
+  {
+    id: "item-income-freelance",
+    title: "Freelance",
+    type: "income",
+    amount: { amount: 18000000, currency: "TOMAN", convertedAmount: 90, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d10,
+    recurrence: "none",
     createdAt,
     updatedAt: createdAt
-  })),
+  },
+  {
+    id: "item-income-side",
+    title: "Side Project",
+    type: "income",
+    amount: { amount: 10000000, currency: "TOMAN", convertedAmount: 50, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d15,
+    recurrence: "none",
+    createdAt,
+    updatedAt: createdAt
+  },
   {
     id: "item-expense-rent",
     title: "Rent",
     type: "expense",
-    amount: { amount: 24000000, currency: "TOMAN", convertedAmount: 120, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
+    amount: { amount: 25000000, currency: "TOMAN", convertedAmount: 125, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d1,
     recurrence: "monthly",
     createdAt,
     updatedAt: createdAt
   },
   {
-    id: "item-expense-2",
-    title: "",
+    id: "item-expense-groceries",
+    title: "Groceries",
     type: "expense",
-    amount: { amount: 60000000, currency: "TOMAN", convertedAmount: 300, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
+    amount: { amount: 7000000, currency: "TOMAN", convertedAmount: 35, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d10,
     recurrence: "none",
+    createdAt,
+    updatedAt: createdAt
+  },
+  {
+    id: "item-expense-transport",
+    title: "Transport",
+    type: "expense",
+    amount: { amount: 3500000, currency: "TOMAN", convertedAmount: 17, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d5,
+    recurrence: "monthly",
     createdAt,
     updatedAt: createdAt
   },
@@ -49,16 +81,38 @@ export const initialItems: MoneyItem[] = [
     title: "Cash",
     type: "savings",
     amount: { amount: 300, currency: "USD", convertedAmount: 60000000, convertedCurrency: "TOMAN", exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
+    date: d1,
     createdAt,
     updatedAt: createdAt
   },
   {
     id: "item-saving-usdt",
-    title: "USDT on wallex",
+    title: "USDT on Wallex",
     type: "savings",
     amount: { amount: 100, currency: "USD", convertedAmount: 20000000, convertedCurrency: "TOMAN", exchangeRateSnapshot: 200000 },
-    date: "2026-05-20",
+    date: d1,
+    createdAt,
+    updatedAt: createdAt
+  },
+  {
+    id: "item-goal-trip",
+    title: "Dubai Trip",
+    type: "goal",
+    targetAmount: { amount: 500000000, currency: "TOMAN", convertedAmount: 2500, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d1,
+    category: "trip",
+    recurrence: "none",
+    createdAt,
+    updatedAt: createdAt
+  },
+  {
+    id: "item-goal-laptop",
+    title: "New Laptop",
+    type: "goal",
+    targetAmount: { amount: 150000000, currency: "TOMAN", convertedAmount: 750, convertedCurrency: "USD", exchangeRateSnapshot: 200000 },
+    date: d1,
+    category: "other",
+    recurrence: "none",
     createdAt,
     updatedAt: createdAt
   }
@@ -72,7 +126,7 @@ export const initialNodes: MoneyFlowNode[] = [
     data: {
       type: "income",
       title: "Income",
-      itemIds: ["item-income-salary", "item-income-2", "item-income-3", "item-income-4", "item-income-5"]
+      itemIds: ["item-income-salary", "item-income-freelance", "item-income-side"]
     }
   },
   {
@@ -82,7 +136,7 @@ export const initialNodes: MoneyFlowNode[] = [
     data: {
       type: "expense",
       title: "Expenses",
-      itemIds: ["item-expense-rent", "item-expense-2"]
+      itemIds: ["item-expense-rent", "item-expense-groceries", "item-expense-transport"]
     }
   },
   {
@@ -93,6 +147,16 @@ export const initialNodes: MoneyFlowNode[] = [
       type: "savings",
       title: "Savings",
       itemIds: ["item-saving-cash", "item-saving-usdt"]
+    }
+  },
+  {
+    id: "node-goals",
+    type: "moneyNode",
+    position: { x: 545, y: 530 },
+    data: {
+      type: "goal",
+      title: "Goals",
+      itemIds: ["item-goal-trip", "item-goal-laptop"]
     }
   }
 ];
@@ -111,6 +175,15 @@ export const initialEdges: MoneyFlowEdge[] = [
     id: "edge-income-savings",
     source: "node-income",
     target: "node-savings",
+    type: "moneyEdge",
+    animated: false,
+    style: { stroke: "#b9babd", strokeWidth: 2 },
+    markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: "#b9babd" }
+  },
+  {
+    id: "edge-income-goals",
+    source: "node-income",
+    target: "node-goals",
     type: "moneyEdge",
     animated: false,
     style: { stroke: "#b9babd", strokeWidth: 2 },

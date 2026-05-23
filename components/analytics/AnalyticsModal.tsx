@@ -20,7 +20,7 @@ export function AnalyticsModal({ open, onClose }: { open: boolean; onClose: () =
   const calendarSystem = useMoneyMapStore((state) => state.calendarSystem);
   const shiftSelectedMonth = useMoneyMapStore((state) => state.shiftSelectedMonth);
   const visibleItems = useMemo(() => items.filter((item) => isItemInMonth(item, selectedMonth)), [items, selectedMonth]);
-  const summary = useMemo(() => getAnalyticsSummary(visibleItems, analyticsCurrency, exchangeRate), [analyticsCurrency, exchangeRate, visibleItems]);
+  const summary = useMemo(() => getAnalyticsSummary(visibleItems, analyticsCurrency, exchangeRate, selectedMonth), [analyticsCurrency, exchangeRate, selectedMonth, visibleItems]);
 
   useEffect(() => {
     if (!open) return;

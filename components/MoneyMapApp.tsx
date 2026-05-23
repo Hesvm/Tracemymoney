@@ -114,7 +114,10 @@ export function MoneyMapApp() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (event === "SIGNED_IN" && session?.user) void syncOnLogin(session.user.id);
+      if (event === "SIGNED_IN" && session?.user) {
+        showToast("Signed in — syncing your data", "success");
+        void syncOnLogin(session.user.id);
+      }
       if (event === "SIGNED_OUT") {
         configureSyncEngine(null);
         setStatus("local-only");

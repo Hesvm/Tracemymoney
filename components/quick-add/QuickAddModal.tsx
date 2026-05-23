@@ -143,14 +143,16 @@ export function QuickAddModal({
           }}
         >
           <motion.form
-            className="w-full max-w-[430px] rounded-[32px] bg-white px-6 py-6 shadow-soft"
+            className="flex w-full max-w-[430px] flex-col rounded-[32px] bg-white shadow-soft"
+            style={{ maxHeight: "min(90dvh, 680px)" }}
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
             onSubmit={submit}
           >
-            <div className="mb-6 flex items-center justify-between">
+            {/* pinned header */}
+            <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-4">
               <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#2f333b]">
                 {editItemId ? copy.title.replace("Add", "Edit") : copy.title}
               </h2>
@@ -164,74 +166,78 @@ export function QuickAddModal({
               </button>
             </div>
 
-            <div className="grid gap-4">
-              <Field label={copy.subject}>
-                <input
-                  key={editItemId ?? "new-title"}
-                  className={inputClass}
-                  name="title"
-                  placeholder={activeType === "income" ? "Salary" : copy.subject}
-                  defaultValue={editItem?.title ?? ""}
-                  required
-                />
-              </Field>
-
-              {activeType !== "bucket" && (
-                <div className="grid grid-cols-[1fr_176px] gap-3">
-                  <Field label={copy.amount}>
-                    <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
-                  </Field>
-                  <Field label="Currency">
-                    <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
-                  </Field>
-                </div>
-              )}
-
-              {activeType === "bucket" && (
-                <Field label="Parent">
-                  <StyledDropdown value={parentNodeId} options={parentOptions} onChange={setParentNodeId} label="Parent" />
+            {/* scrollable fields */}
+            <div className="flex-1 overflow-y-auto px-6">
+              <div className="grid gap-4 pb-2">
+                <Field label={copy.subject}>
+                  <input
+                    key={editItemId ?? "new-title"}
+                    className={inputClass}
+                    name="title"
+                    placeholder={activeType === "income" ? "Salary" : copy.subject}
+                    defaultValue={editItem?.title ?? ""}
+                    dir="auto"
+                    required
+                  />
                 </Field>
-              )}
 
-              {activeType !== "bucket" && (
-                <>
+                {activeType !== "bucket" && (
+                  <div className="grid grid-cols-[1fr_176px] gap-3">
+                    <Field label={copy.amount}>
+                      <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
+                    </Field>
+                    <Field label="Currency">
+                      <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
+                    </Field>
+                  </div>
+                )}
+
+                {activeType === "bucket" && (
+                  <Field label="Parent">
+                    <StyledDropdown value={parentNodeId} options={parentOptions} onChange={setParentNodeId} label="Parent" />
+                  </Field>
+                )}
+
+                {activeType !== "bucket" && (
                   <Field label="Date">
                     <StyledDatePicker value={date} onChange={setDate} calendarSystem={calendarSystem} />
                   </Field>
-                </>
-              )}
+                )}
 
-              {activeType !== "bucket" && activeType !== "goal" && (
-                <>
+                {activeType !== "bucket" && activeType !== "goal" && (
                   <Field label="Recurring">
                     <StyledDropdown value={recurrence} options={recurrenceOptions} onChange={setRecurrence} label="Recurring" />
                   </Field>
-                </>
-              )}
+                )}
 
-              {activeType === "goal" && (
-                <Field label="Category">
-                  <GoalCategoryChips value={goalCategory} onChange={setGoalCategory} />
+                {activeType === "goal" && (
+                  <Field label="Category">
+                    <GoalCategoryChips value={goalCategory} onChange={setGoalCategory} />
+                  </Field>
+                )}
+
+                <Field label="Note">
+                  <textarea
+                    key={editItemId ?? "new-note"}
+                    className={`${inputClass} h-24 resize-none rounded-xl py-3`}
+                    name="note"
+                    placeholder="Optional"
+                    defaultValue={editItem?.note ?? ""}
+                    dir="auto"
+                  />
                 </Field>
-              )}
-
-              <Field label="Note">
-                <textarea
-                  key={editItemId ?? "new-note"}
-                  className={`${inputClass} h-24 resize-none rounded-xl py-3`}
-                  name="note"
-                  placeholder="Optional"
-                  defaultValue={editItem?.note ?? ""}
-                />
-              </Field>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className={`mt-6 h-13 w-full rounded-full px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
-            >
-              {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
-            </button>
+            {/* pinned submit */}
+            <div className="shrink-0 px-6 pt-3 pb-6">
+              <button
+                type="submit"
+                className={`h-13 w-full rounded-full px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
+              >
+                {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
+              </button>
+            </div>
           </motion.form>
         </motion.div>
       )}
