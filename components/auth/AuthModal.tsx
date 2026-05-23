@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { X, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -35,60 +36,79 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       style={{ background: "rgba(0,0,0,0.15)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl" style={{ maxHeight: "90dvh" }}>
+      <div className="relative w-full max-w-sm overflow-y-auto rounded-3xl bg-white shadow-2xl" style={{ maxHeight: "90dvh" }}>
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 grid size-8 place-items-center rounded-full text-[#a0a3ae] transition hover:bg-[#f7f5ef] hover:text-[#626677]"
+          className="absolute right-4 top-4 z-10 grid size-8 place-items-center rounded-full text-[#a0a3ae] transition hover:bg-[#f7f5ef] hover:text-[#626677]"
           aria-label="Close"
         >
           <X className="size-4" strokeWidth={2.2} />
         </button>
 
-        <div className="mb-6 text-center">
-          <p className="text-[15px] font-semibold text-[#30333b]">Sync across devices</p>
-          <p className="mt-1 text-[13px] text-[#a0a3ae]">Sign in to back up your money map.</p>
+        {/* Illustration */}
+        <div className="flex justify-center pt-8 pb-2">
+          <Image
+            src={step === "sent" ? "/envelope-sent.webp" : "/envelope-idle.webp"}
+            alt=""
+            width={120}
+            height={120}
+            className="size-[120px] object-contain"
+            aria-hidden="true"
+          />
         </div>
 
-        {step === "sent" ? (
-          <div className="text-center">
-            <p className="text-[14px] font-medium text-[#4caf7d]">Check your email</p>
-            <p className="mt-2 text-[13px] text-[#a0a3ae]">
-              A sign-in link has been sent to <span className="font-medium text-[#626677]">{email}</span>.
-            </p>
-          </div>
-        ) : (
-          <>
-            <form onSubmit={handleMagicLink} className="space-y-3">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-[#ebe7dd] bg-[#fbfaf7] px-4 py-3 text-[14px] text-[#30333b] outline-none placeholder:text-[#c0c2cb] focus:border-[#b0b2bb]"
-                required
-              />
-              <button
-                type="submit"
-                disabled={step === "loading"}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#30333b] py-3 text-[14px] font-semibold text-white transition hover:bg-[#404350] disabled:opacity-60"
-              >
-                {step === "loading" ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Mail className="size-4" strokeWidth={2} />
-                )}
-                Continue with Email
-              </button>
-            </form>
-
-            {step === "error" && (
-              <p className="mt-3 text-center text-[13px] text-[#c64141]">
-                Something went wrong. Please try again.
-              </p>
+        <div className="px-8 pb-8">
+          <div className="mb-6 text-center">
+            {step === "sent" ? (
+              <>
+                <p className="text-[15px] font-semibold text-[#30333b]">Check your email</p>
+                <p className="mt-1 text-[13px] text-[#a0a3ae]">
+                  We sent a sign-in link to{" "}
+                  <span className="font-medium text-[#626677]">{email}</span>.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-[15px] font-semibold text-[#30333b]">Sync across devices</p>
+                <p className="mt-1 text-[13px] text-[#a0a3ae]">Sign in to back up your money map.</p>
+              </>
             )}
-          </>
-        )}
+          </div>
+
+          {step !== "sent" && (
+            <>
+              <form onSubmit={handleMagicLink} className="space-y-3">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-[#ebe7dd] bg-[#fbfaf7] px-4 py-3 text-[14px] text-[#30333b] outline-none placeholder:text-[#c0c2cb] focus:border-[#b0b2bb]"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={step === "loading"}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#30333b] py-3 text-[14px] font-semibold text-white transition hover:bg-[#404350] disabled:opacity-60"
+                >
+                  {step === "loading" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Mail className="size-4" strokeWidth={2} />
+                  )}
+                  Continue with Email
+                </button>
+              </form>
+
+              {step === "error" && (
+                <p className="mt-3 text-center text-[13px] text-[#c64141]">
+                  Something went wrong. Please try again.
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>,
     document.body
