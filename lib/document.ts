@@ -6,6 +6,7 @@ import type {
   AppSettings,
   CalendarSystem,
   ExchangeRateState,
+  MoneyAmount,
   MoneyFlowEdge,
   MoneyFlowNode,
   MoneyItem,
@@ -77,12 +78,42 @@ function ensureSystemNodes(nodes: MoneyFlowNode[], items: MoneyItem[]): MoneyFlo
   return result;
 }
 
+type LegacyMoneyAmount = {
+  amount?: number;
+  currency?: string;
+  convertedAmount?: number;
+  convertedCurrency?: string;
+  exchangeRateSnapshot?: number;
+  convertedAmountAtEntry?: number;
+  exchangeRateAtEntry?: number;
+};
+
+function migrateMoneyAmount(raw: LegacyMoneyAmount | undefined): MoneyAmount | undefined {
+  if (!raw) return undefined;
+  const result = { ...raw } as Record<string, unknown>;
+  if ("exchangeRateSnapshot" in result && !("exchangeRateAtEntry" in result)) {
+    result.exchangeRateAtEntry = result.exchangeRateSnapshot;
+  }
+  if ("convertedAmount" in result && !("convertedAmountAtEntry" in result)) {
+    result.convertedAmountAtEntry = result.convertedAmount;
+  }
+  delete result.exchangeRateSnapshot;
+  delete result.convertedAmount;
+  return result as unknown as MoneyAmount;
+}
+
 export function applyDocument(doc: UserDocument): Partial<DocumentSlice> {
   const isEmpty = doc.nodes.length === 0 && doc.items.length === 0;
   return {
     nodes: ensureSystemNodes(doc.nodes, doc.items),
     edges: isEmpty ? initialEdges : doc.edges.map(decorateEdge),
-    items: isEmpty ? initialItems : doc.items,
+    items: isEmpty
+      ? initialItems
+      : doc.items.map((item) => ({
+          ...item,
+          amount: migrateMoneyAmount(item.amount as unknown as LegacyMoneyAmount),
+          targetAmount: migrateMoneyAmount(item.targetAmount as unknown as LegacyMoneyAmount),
+        })),
     settings: { ...defaultAppSettings, ...doc.settings },
     selectedMonth: normalizeMonth(doc.selectedMonth),
     calendarSystem: doc.calendarSystem,
