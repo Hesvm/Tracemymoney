@@ -13,12 +13,12 @@ export function formatPrimaryAmount(amount?: MoneyAmount) {
 export function formatConvertedAmount(amount?: MoneyAmount, liveRate?: number | null) {
   if (!amount) return "";
 
-  if (amount.convertedAmount && amount.convertedCurrency) {
+  if (amount.convertedAmountAtEntry != null && amount.convertedCurrency) {
     const formatted = new Intl.NumberFormat("en-US", {
       maximumFractionDigits: amount.convertedCurrency === "USD" ? 2 : 0
-    }).format(amount.convertedAmount);
+    }).format(amount.convertedAmountAtEntry);
     const value = amount.convertedCurrency === "USD" ? `$${formatted}` : `${formatted} T`;
-    return `~ ${value} at time`;
+    return `~ ${value} · entry rate`;
   }
 
   if (liveRate && liveRate > 0) {

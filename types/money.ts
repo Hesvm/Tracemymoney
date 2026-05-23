@@ -20,9 +20,9 @@ export type GoalCategory = "car" | "phone" | "trip" | "gift" | "house" | "boat" 
 export interface MoneyAmount {
   amount: number;
   currency: Currency;
-  convertedAmount?: number;
+  convertedAmountAtEntry?: number;
   convertedCurrency?: Currency;
-  exchangeRateSnapshot?: number;
+  exchangeRateAtEntry?: number;
 }
 
 export interface MoneyItem {

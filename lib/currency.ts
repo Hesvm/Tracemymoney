@@ -1,11 +1,11 @@
 import type { Currency, MoneyAmount } from "@/types/money";
 
-export function createMoneyAmount(amount: number, currency: Currency, usdToToman: number | null): MoneyAmount {
+export function createLockedAmount(amount: number, currency: Currency, rate: number | null): MoneyAmount {
   if (!Number.isFinite(amount)) {
     return { amount: 0, currency };
   }
 
-  if (!usdToToman) {
+  if (!rate) {
     return { amount, currency };
   }
 
@@ -13,17 +13,24 @@ export function createMoneyAmount(amount: number, currency: Currency, usdToToman
     return {
       amount,
       currency,
-      convertedAmount: Math.round(amount * usdToToman),
+      convertedAmountAtEntry: Math.round(amount * rate),
       convertedCurrency: "TOMAN",
-      exchangeRateSnapshot: usdToToman
+      exchangeRateAtEntry: rate,
     };
   }
 
   return {
     amount,
     currency,
-    convertedAmount: Number((amount / usdToToman).toFixed(2)),
+    convertedAmountAtEntry: Number((amount / rate).toFixed(2)),
     convertedCurrency: "USD",
-    exchangeRateSnapshot: usdToToman
+    exchangeRateAtEntry: rate,
   };
+}
+
+export function createLiveAmount(amount: number, currency: Currency): MoneyAmount {
+  if (!Number.isFinite(amount)) {
+    return { amount: 0, currency };
+  }
+  return { amount, currency };
 }
