@@ -48,6 +48,8 @@ export function MoneyMapApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const dbLoadedRef = useRef(false);
+  const pendingSyncUserIdRef = useRef<string | null>(null);
 
   const fetchExchangeRate = useMoneyMapStore((state) => state.fetchExchangeRate);
   const nodes = useMoneyMapStore((state) => state.nodes);
@@ -62,7 +64,13 @@ export function MoneyMapApp() {
   // 1. Load from IndexedDB immediately — app works offline from the first frame
   useEffect(() => {
     void initFromDB().then(() => {
+      dbLoadedRef.current = true;
       setStatus(navigator.onLine ? "local-only" : "offline");
+      // If auth resolved before DB was ready, sync now
+      if (pendingSyncUserIdRef.current) {
+        void syncOnLogin(pendingSyncUserIdRef.current);
+        pendingSyncUserIdRef.current = null;
+      }
     });
   }, [setStatus]);
 
@@ -109,14 +117,24 @@ export function MoneyMapApp() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoaded();
-      if (session?.user) void syncOnLogin(session.user.id);
+      if (session?.user) {
+        if (dbLoadedRef.current) {
+          void syncOnLogin(session.user.id);
+        } else {
+          pendingSyncUserIdRef.current = session.user.id;
+        }
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === "SIGNED_IN" && session?.user) {
         showToast("Signed in — syncing your data", "success");
-        void syncOnLogin(session.user.id);
+        if (dbLoadedRef.current) {
+          void syncOnLogin(session.user.id);
+        } else {
+          pendingSyncUserIdRef.current = session.user.id;
+        }
       }
       if (event === "SIGNED_OUT") {
         configureSyncEngine(null);
@@ -125,7 +143,7 @@ export function MoneyMapApp() {
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoaded, setStatus]);
+  }, [setUser, setLoaded, setStatus, showToast]);
 
   useEffect(() => {
     void fetchExchangeRate();

@@ -452,13 +452,15 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
 export async function initFromDB(): Promise<void> {
   const doc = await loadLocalDocument();
-  if (doc) {
+  const hasData = doc && (doc.nodes.length > 0 || doc.items.length > 0);
+  if (hasData) {
     useMoneyMapStore.setState(applyDocument(doc));
   } else {
     useMoneyMapStore.setState({
       items: initialItems,
       nodes: initialNodes,
       edges: initialEdges,
+      ...(doc ? { settings: doc.settings, selectedMonth: doc.selectedMonth, calendarSystem: doc.calendarSystem } : {}),
     });
   }
 }
