@@ -8,12 +8,14 @@ export const metadata: Metadata = {
     title: "Trace My Money",
     description: "A quiet visual money-mapping workspace. Track income, expenses, savings, and goals across currencies.",
     type: "website",
-    locale: "en_US"
+    locale: "en_US",
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "Trace My Money" }]
   },
   twitter: {
     card: "summary_large_image",
     title: "Trace My Money",
-    description: "A quiet visual money-mapping workspace. Track income, expenses, savings, and goals across currencies."
+    description: "A quiet visual money-mapping workspace. Track income, expenses, savings, and goals across currencies.",
+    images: ["/opengraph-image.png"]
   }
 };
 
