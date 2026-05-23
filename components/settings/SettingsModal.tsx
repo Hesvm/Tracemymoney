@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { RefreshCw, X } from "lucide-react";
+import { RefreshCw, X, LogOut } from "lucide-react";
 import { DataActions } from "@/components/settings/DataActions";
 import { SegmentedSetting } from "@/components/settings/SegmentedSetting";
 import { SettingsRow } from "@/components/settings/SettingsRow";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { SettingsToggle } from "@/components/settings/SettingsToggle";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
+import { useAuthStore } from "@/store/authStore";
+import { supabase } from "@/lib/supabaseClient";
 import type { CalendarSystem, Currency } from "@/types/money";
 
 function formatRate(value: number | null) {
@@ -31,6 +34,8 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const updateSettings = useMoneyMapStore((state) => state.updateSettings);
   const fetchExchangeRate = useMoneyMapStore((state) => state.fetchExchangeRate);
   const shouldAnimate = settings.softAnimations;
+  const user = useAuthStore((state) => state.user);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +49,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   }, [onClose, open]);
 
   return (
+    <>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -126,6 +132,31 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
                 <SettingsToggle label="Soft animations" checked={settings.softAnimations} onChange={(softAnimations) => updateSettings({ softAnimations })} />
               </SettingsSection>
 
+              <SettingsSection title="Account">
+                {user ? (
+                  <SettingsRow label="Signed in" detail={user.email}>
+                    <button
+                      type="button"
+                      onClick={() => void supabase.auth.signOut()}
+                      className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#c64141] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
+                    >
+                      <LogOut className="size-3.5" strokeWidth={2.1} />
+                      Sign out
+                    </button>
+                  </SettingsRow>
+                ) : (
+                  <SettingsRow label="Cloud sync" detail="Sign in to back up across devices">
+                    <button
+                      type="button"
+                      onClick={() => setAuthOpen(true)}
+                      className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#6b665d] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
+                    >
+                      Sign in
+                    </button>
+                  </SettingsRow>
+                )}
+              </SettingsSection>
+
               <SettingsSection title="Data">
                 <DataActions />
               </SettingsSection>
@@ -134,5 +165,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
         </motion.div>
       )}
     </AnimatePresence>
+    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+  </>
   );
 }

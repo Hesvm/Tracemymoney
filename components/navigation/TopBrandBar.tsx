@@ -1,8 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { AuthButton } from "@/components/auth/AuthButton";
-import { SyncStatus } from "@/components/navigation/SyncStatus";
 
 export function TopBrandBar() {
   return (
@@ -11,8 +9,6 @@ export function TopBrandBar() {
         <Image src="/logo.svg" alt="" width={22} height={22} className="size-[22px]" aria-hidden="true" />
       </span>
       <span className="text-[17px] font-bold leading-none tracking-[0] text-[#30333b]">Trace my money</span>
-      <SyncStatus />
-      <AuthButton />
     </div>
   );
 }

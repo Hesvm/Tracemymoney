@@ -7,6 +7,7 @@ import { ItemContextMenu } from "@/components/context-menu/ItemContextMenu";
 import { NodeContextMenu } from "@/components/context-menu/NodeContextMenu";
 import { QuickAddModal } from "@/components/quick-add/QuickAddModal";
 import { MoneyCanvas } from "@/components/canvas/MoneyCanvas";
+import { AppToast } from "@/components/toast/AppToast";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { TopBrandBar } from "@/components/navigation/TopBrandBar";
 import { SearchPopover } from "@/components/search/SearchPopover";
@@ -14,6 +15,7 @@ import { SettingsModal } from "@/components/settings/SettingsModal";
 import { useMoneyMapStore, initFromDB } from "@/store/moneyMapStore";
 import { useAuthStore } from "@/store/authStore";
 import { useSyncStore } from "@/store/syncStore";
+import { useToastStore } from "@/store/toastStore";
 import { supabase } from "@/lib/supabaseClient";
 import { saveLocalDocument } from "@/lib/db";
 import { extractDocument } from "@/lib/document";
@@ -53,6 +55,7 @@ export function MoneyMapApp() {
   const closeContextMenu = useMoneyMapStore((state) => state.closeContextMenu);
   const { setUser, setLoaded } = useAuthStore();
   const setStatus = useSyncStore((state) => state.setStatus);
+  const showToast = useToastStore((state) => state.showToast);
 
   // 1. Load from IndexedDB immediately — app works offline from the first frame
   useEffect(() => {
@@ -75,6 +78,15 @@ export function MoneyMapApp() {
   useEffect(() => {
     return registerOnlineListener();
   }, []);
+
+  // Show toast on sync error
+  useEffect(() => {
+    return useSyncStore.subscribe((state) => {
+      if (state.status === "error") {
+        showToast("Sync failed — changes are saved locally");
+      }
+    });
+  }, [showToast]);
 
   // 4. Reflect network offline status
   useEffect(() => {
@@ -183,6 +195,7 @@ export function MoneyMapApp() {
       <AnalyticsModal open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <SearchPopover open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <AppToast />
     </main>
   );
 }
