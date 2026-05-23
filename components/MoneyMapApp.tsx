@@ -8,6 +8,7 @@ import { NodeContextMenu } from "@/components/context-menu/NodeContextMenu";
 import { QuickAddModal } from "@/components/quick-add/QuickAddModal";
 import { MoneyCanvas } from "@/components/canvas/MoneyCanvas";
 import { AppToast } from "@/components/toast/AppToast";
+import { SignInNudge } from "@/components/toast/SignInNudge";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { TopBrandBar } from "@/components/navigation/TopBrandBar";
 import { SearchPopover } from "@/components/search/SearchPopover";
@@ -236,6 +237,7 @@ export function MoneyMapApp() {
       <AnalyticsModal open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <SearchPopover open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SignInNudge />
       <AppToast />
     </main>
   );

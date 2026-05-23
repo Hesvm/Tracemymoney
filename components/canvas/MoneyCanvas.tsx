@@ -13,6 +13,7 @@ import {
 } from "@xyflow/react";
 import { MoneyEdge } from "@/components/canvas/MoneyEdge";
 import { MoneyNode } from "@/components/canvas/MoneyNode";
+import { decorateEdge } from "@/lib/edges";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 
 const nodeTypes = {
@@ -49,7 +50,6 @@ function CanvasInner() {
   const onNodesChange = useMoneyMapStore((state) => state.onNodesChange);
   const onEdgesChange = useMoneyMapStore((state) => state.onEdgesChange);
   const addEdge = useMoneyMapStore((state) => state.addEdge);
-  const reconnectEdge = useMoneyMapStore((state) => state.reconnectEdge);
   const setSelectedEdgeId = useMoneyMapStore((state) => state.setSelectedEdgeId);
   const selectedEdgeId = useMoneyMapStore((state) => state.selectedEdgeId);
   const showCanvasDots = useMoneyMapStore((state) => state.settings.showCanvasDots);
@@ -107,25 +107,50 @@ function CanvasInner() {
   const handleReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       reconnectSuccessful.current = true;
-      const moved = reconnectEdge(oldEdge.id, newConnection);
-      if (moved) setSelectedEdgeId(null);
+      if (!newConnection.source || !newConnection.target) return;
+      if (newConnection.source === newConnection.target) return;
+
+      // ReactFlow fires onEdgesChange(remove) when the drag starts, so by the
+      // time onReconnect fires the edge may already be gone from the store.
+      // We handle both: update in-place if still present, or re-add if missing.
+      useMoneyMapStore.setState((state) => {
+        const hasDuplicate = state.edges.some(
+          (e) =>
+            e.id !== oldEdge.id &&
+            e.source === newConnection.source &&
+            e.target === newConnection.target
+        );
+        if (hasDuplicate) return state;
+
+        const reconnected = decorateEdge({
+          ...oldEdge,
+          source: newConnection.source!,
+          target: newConnection.target!,
+          sourceHandle: newConnection.sourceHandle ?? undefined,
+          targetHandle: newConnection.targetHandle ?? undefined,
+        });
+
+        const edgeIndex = state.edges.findIndex((e) => e.id === oldEdge.id);
+        const edges =
+          edgeIndex >= 0
+            ? state.edges.map((e) => (e.id === oldEdge.id ? reconnected : e))
+            : [...state.edges, reconnected];
+
+        return { lastModifiedAt: new Date().toISOString(), edges };
+      });
+
+      setSelectedEdgeId(null);
     },
-    [reconnectEdge, setSelectedEdgeId]
+    [setSelectedEdgeId]
   );
 
   const handleReconnectEnd = useCallback(
-    (_: MouseEvent | TouchEvent, oldEdge: Edge) => {
-      if (!reconnectSuccessful.current) {
-        reconnectEdge(oldEdge.id, {
-          source: oldEdge.source,
-          target: oldEdge.target,
-          sourceHandle: oldEdge.sourceHandle ?? null,
-          targetHandle: oldEdge.targetHandle ?? null
-        });
-      }
+    (_: MouseEvent | TouchEvent, _oldEdge: Edge) => {
+      // If reconnect failed (dropped in empty space), the edge was already
+      // removed by onEdgesChange at drag start — it stays removed.
       reconnectSuccessful.current = false;
     },
-    [reconnectEdge]
+    []
   );
 
   const handleNodeContextMenu = useCallback(
