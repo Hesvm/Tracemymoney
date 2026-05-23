@@ -38,15 +38,15 @@ export function SignInNudge() {
       <AnimatePresence>
         {visible && (
           <motion.div
-            className="fixed bottom-28 left-1/2 z-30 -translate-x-1/2 pointer-events-auto"
+            className="fixed bottom-28 left-1/2 z-30 -translate-x-1/2 pointer-events-auto max-w-[calc(100dvw-2rem)]"
             initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-2.5 rounded-full bg-white px-3 py-2.5 shadow-dock whitespace-nowrap">
+            <div className="flex items-center gap-2.5 rounded-full bg-white px-3 py-2.5 shadow-dock overflow-hidden">
               <span className="size-1.5 shrink-0 rounded-full bg-[#3d7fbf]" />
-              <span className="text-[13px] font-medium text-[#30333b]">Sign in to sync across devices</span>
+              <span className="text-[13px] font-medium text-[#30333b] truncate">Sign in to sync across devices</span>
               <button
                 type="button"
                 onClick={() => { dismiss(); setAuthOpen(true); }}
