@@ -118,10 +118,13 @@ function compactNodePosition(type: MoneyNodeType, count: number) {
 
 export const useMoneyMapStore = create<MoneyMapStore>()(
   (set, get) => ({
-    items: [],
-    nodes: [],
-    edges: [],
-    selectedMonth: "2026-05",
+    items: initialItems,
+    nodes: initialNodes,
+    edges: initialEdges,
+    selectedMonth: (() => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    })(),
     calendarSystem: "shamsi",
     settings: defaultAppSettings,
     selectedEdgeId: null,
@@ -452,15 +455,9 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
 export async function initFromDB(): Promise<void> {
   const doc = await loadLocalDocument();
-  const hasData = doc && (doc.nodes.length > 0 || doc.items.length > 0);
-  if (hasData) {
+  if (doc) {
+    // applyDocument handles the empty-doc case by restoring initialData
     useMoneyMapStore.setState(applyDocument(doc));
-  } else {
-    useMoneyMapStore.setState({
-      items: initialItems,
-      nodes: initialNodes,
-      edges: initialEdges,
-      ...(doc ? { settings: doc.settings, selectedMonth: doc.selectedMonth, calendarSystem: doc.calendarSystem } : {}),
-    });
   }
+  // No doc → store already initialized with initialData + current selectedMonth
 }
