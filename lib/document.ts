@@ -36,6 +36,7 @@ export type DocumentSlice = {
   selectedMonth: string;
   calendarSystem: CalendarSystem;
   exchangeRate: ExchangeRateState;
+  lastModifiedAt: string;
 };
 
 export function extractDocument(state: DocumentSlice): UserDocument {
@@ -51,7 +52,9 @@ export function extractDocument(state: DocumentSlice): UserDocument {
       fetchedAt: state.exchangeRate.fetchedAt,
     },
     metadata: {
-      updatedAt: new Date().toISOString(),
+      // Use the store's lastModifiedAt so LWW merge compares real user-action timestamps,
+      // not "last time this serialization ran" which would always be "now".
+      updatedAt: state.lastModifiedAt,
       version: 1,
     },
   };
@@ -88,5 +91,8 @@ export function applyDocument(doc: UserDocument): Partial<DocumentSlice> {
       fetchedAt: doc.exchangeRate.fetchedAt,
       isLoading: false,
     },
+    // Restore the real user-action timestamp so the next extractDocument
+    // still reflects when the user actually last changed data.
+    lastModifiedAt: doc.metadata.updatedAt,
   };
 }

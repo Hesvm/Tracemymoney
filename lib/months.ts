@@ -3,6 +3,7 @@ import type { CalendarSystem } from "@/types/money";
 
 const fallbackMonth = "2026-05";
 const shamsiMonthAbbreviations = ["FAR", "ORD", "KHO", "TIR", "MOR", "SHA", "MHR", "ABN", "AZR", "DEY", "BAH", "ESF"];
+export const shamsiMonthAbbr = ["Far", "Ord", "Kho", "Tir", "Mor", "Sha", "Mhr", "Abn", "Azr", "Dey", "Bah", "Esf"];
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -27,7 +28,36 @@ export function formatMonthLabel(month: string, calendarSystem: CalendarSystem) 
   return `${names[parts.month - 1]} ${parts.year}`;
 }
 
-export function isItemInMonth(item: { date?: string }, month: string) {
+export function isItemInMonth(item: { date?: string; recurrence?: string }, month: string) {
   if (!item.date) return false;
-  return item.date.slice(0, 7) === normalizeMonth(month);
+  const itemMonth = item.date.slice(0, 7);
+  const targetMonth = normalizeMonth(month);
+
+  if (!item.recurrence || item.recurrence === "none") {
+    return itemMonth === targetMonth;
+  }
+
+  // recurring items appear in every applicable month on or after creation
+  if (item.recurrence === "monthly" || item.recurrence === "daily" || item.recurrence === "weekly") {
+    return targetMonth >= itemMonth;
+  }
+
+  if (item.recurrence === "yearly") {
+    const [itemYear, itemMth] = itemMonth.split("-");
+    const [targetYear, targetMth] = targetMonth.split("-");
+    return targetMth === itemMth && targetYear >= itemYear;
+  }
+
+  return itemMonth === targetMonth;
+}
+
+export function formatShortDate(isoDate: string | undefined, calendarSystem: CalendarSystem): string {
+  if (!isoDate) return "";
+  const parts = isoToCalendarParts(isoDate, calendarSystem);
+  if (calendarSystem === "shamsi") {
+    return `${parts.day} ${shamsiMonthAbbr[parts.month - 1]}`;
+  }
+  const parsed = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return `${parsed.toLocaleString("en-US", { month: "short" })} ${parsed.getDate()}`;
 }

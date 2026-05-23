@@ -4,8 +4,10 @@ import { ArrowDown, ArrowUp, Goal, PiggyBank, Plus } from "lucide-react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Image from "next/image";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { formatConvertedAmount, formatDateLabel, formatPrimaryAmount } from "@/lib/formatters";
-import { isItemInMonth } from "@/lib/months";
+import { formatShortDate, isItemInMonth } from "@/lib/months";
+import { useAnimatedRate } from "@/hooks/useAnimatedRate";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { MoneyFlowNode, MoneyItem, MoneyNodeType } from "@/types/money";
 
@@ -15,6 +17,13 @@ const nodeStyles: Record<MoneyNodeType, { pill: string; iconBg: string; icon: Re
   savings: { pill: "bg-[#fff1d7] text-[#a16325]", iconBg: "bg-[#a16325]", icon: PiggyBank },
   goal: { pill: "bg-[#fff1d7] text-[#a16325]", iconBg: "bg-[#a16325]", icon: Goal },
   bucket: { pill: "bg-[#f7e6e2] text-[#8b625a]", iconBg: "bg-[#8b625a]", icon: PiggyBank }
+};
+
+const recurrenceLabel: Record<string, string> = {
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+  yearly: "yearly"
 };
 
 function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
@@ -40,15 +49,20 @@ function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
 function MoneyRow({
   item,
   nodeId,
-  calendarSystem
+  calendarSystem,
+  animatedRate,
+  rateTick
 }: {
   item: MoneyItem;
   nodeId: string;
   calendarSystem: "shamsi" | "gregorian";
+  animatedRate: number | null;
+  rateTick: number;
 }) {
   const primary = formatPrimaryAmount(item.amount);
   const title = item.title ? ` :: ${item.title}` : "";
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
+  const isRecurring = item.recurrence && item.recurrence !== "none";
 
   return (
     <li
@@ -64,9 +78,28 @@ function MoneyRow({
           {primary}
           {title}
         </div>
-        <div className="mt-1 text-[13px] italic leading-none text-[#868b9b]">{formatConvertedAmount(item.amount)}</div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={rateTick}
+            className="mt-1 text-[13px] italic leading-none text-[#868b9b]"
+            initial={{ opacity: 0.4 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {formatConvertedAmount(item.amount, animatedRate)}
+          </motion.div>
+        </AnimatePresence>
       </div>
-      <div className="pt-1 text-[11px] leading-none text-[#868b9b]">{formatDateLabel(item.date, calendarSystem)}</div>
+      <div className="pt-1 text-right text-[11px] leading-none text-[#868b9b]">
+        {isRecurring ? (
+          <>
+            <div>{formatShortDate(item.date, calendarSystem)}</div>
+            <div className="mt-0.5 italic opacity-70">↻ {recurrenceLabel[item.recurrence!]}</div>
+          </>
+        ) : (
+          formatDateLabel(item.date, calendarSystem)
+        )}
+      </div>
     </li>
   );
 }
@@ -112,6 +145,9 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
   const selectedMonth = useMoneyMapStore((state) => state.selectedMonth);
   const focusedNodeId = useMoneyMapStore((state) => state.focusedNodeId);
   const setPendingAddNode = useMoneyMapStore((state) => state.setPendingAddNode);
+  const liveRate = useMoneyMapStore((state) => state.exchangeRate.usdToToman);
+  const { displayed: animatedRate, ticked: rateTick } = useAnimatedRate(liveRate);
+
   const nodeItems = data.itemIds
     .map((id) => items.find((item) => item.id === id))
     .filter((item): item is MoneyItem => Boolean(item))
@@ -152,7 +188,14 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       <ul className="space-y-2">
         {!data.collapsed && nodeItems.length > 0 ? (
           nodeItems.map((item) => (
-            <MoneyRow key={item.id} item={item} nodeId={id} calendarSystem={calendarSystem} />
+            <MoneyRow
+              key={item.id}
+              item={item}
+              nodeId={id}
+              calendarSystem={calendarSystem}
+              animatedRate={animatedRate}
+              rateTick={rateTick}
+            />
           ))
         ) : !data.collapsed ? (
           <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">No items this month</li>

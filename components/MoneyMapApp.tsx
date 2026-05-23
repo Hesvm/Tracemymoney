@@ -21,6 +21,8 @@ import { saveLocalDocument } from "@/lib/db";
 import { extractDocument } from "@/lib/document";
 import {
   markDirty,
+  markSyncReady,
+  isSyncReady,
   syncOnLogin,
   configureSyncEngine,
   registerOnlineListener,
@@ -63,20 +65,25 @@ export function MoneyMapApp() {
 
   // 1. Load from IndexedDB immediately — app works offline from the first frame
   useEffect(() => {
-    void initFromDB().then(() => {
+    void initFromDB().then(async () => {
       dbLoadedRef.current = true;
       setStatus(navigator.onLine ? "local-only" : "offline");
-      // If auth resolved before DB was ready, sync now
+      // If auth resolved before DB was ready, sync now and wait before marking ready
       if (pendingSyncUserIdRef.current) {
-        void syncOnLogin(pendingSyncUserIdRef.current);
+        await syncOnLogin(pendingSyncUserIdRef.current);
         pendingSyncUserIdRef.current = null;
       }
+      // All initialization done — allow subscription to flush dirty writes
+      markSyncReady();
     });
   }, [setStatus]);
 
-  // 2. Subscribe store → save to IndexedDB on every change + mark dirty for cloud sync
+  // 2. Subscribe store → save to IndexedDB on every change + mark dirty for cloud sync.
+  // isSyncReady() gate prevents the subscription from flushing the initial placeholder
+  // state (or a partially-loaded state) as a cloud write before initFromDB completes.
   useEffect(() => {
     const unsubscribe = useMoneyMapStore.subscribe(async (state) => {
+      if (!isSyncReady()) return;
       const doc = extractDocument(state);
       await saveLocalDocument(doc);
       markDirty();
@@ -119,7 +126,7 @@ export function MoneyMapApp() {
       setLoaded();
       if (session?.user) {
         if (dbLoadedRef.current) {
-          void syncOnLogin(session.user.id);
+          void syncOnLogin(session.user.id).then(() => markSyncReady());
         } else {
           pendingSyncUserIdRef.current = session.user.id;
         }
@@ -131,7 +138,7 @@ export function MoneyMapApp() {
       if (event === "SIGNED_IN" && session?.user) {
         showToast("Signed in — syncing your data", "success");
         if (dbLoadedRef.current) {
-          void syncOnLogin(session.user.id);
+          void syncOnLogin(session.user.id).then(() => markSyncReady());
         } else {
           pendingSyncUserIdRef.current = session.user.id;
         }

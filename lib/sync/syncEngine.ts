@@ -8,13 +8,25 @@ import { useMoneyMapStore } from "@/store/moneyMapStore";
 
 let dirtyTimer: ReturnType<typeof setTimeout> | null = null;
 let activeUserId: string | null = null;
+// Becomes true once initFromDB + optional syncOnLogin finish. Prevents the
+// store subscription from flushing stale initial-state writes before we've
+// had a chance to load the real document.
+let syncReady = false;
+
+export function markSyncReady(): void {
+  syncReady = true;
+}
+
+export function isSyncReady(): boolean {
+  return syncReady;
+}
 
 export function configureSyncEngine(userId: string | null): void {
   activeUserId = userId;
 }
 
 export function markDirty(): void {
-  if (!activeUserId) return;
+  if (!activeUserId || !syncReady) return;
   if (dirtyTimer) clearTimeout(dirtyTimer);
   dirtyTimer = setTimeout(() => void triggerUpload(), 3000);
 }

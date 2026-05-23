@@ -79,13 +79,21 @@ export function AnalyticsModal({ open, onClose }: { open: boolean; onClose: () =
             />
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 sm:px-7">
-              <div className="grid grid-cols-1 gap-4 pb-2 lg:grid-cols-2">
-                <MoneyFlowReplay summary={summary} />
-                <RealValueCard summary={summary} />
-                <GoalsProgressCard summary={summary} />
-                <MoneyLeaksCard summary={summary} />
-                <IncomeRhythmCard summary={summary} />
-              </div>
+              {visibleItems.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 pb-12 pt-8 text-center">
+                  <div className="text-4xl">📊</div>
+                  <p className="text-[17px] font-semibold text-[#2f333b]">No data for this month</p>
+                  <p className="max-w-[260px] text-[14px] leading-snug text-[#9a958d]">Add income, expenses, or savings to see your analytics here.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 pb-2 lg:grid-cols-2">
+                  <MoneyFlowReplay summary={summary} />
+                  <RealValueCard summary={summary} />
+                  <GoalsProgressCard summary={summary} />
+                  <MoneyLeaksCard summary={summary} />
+                  <IncomeRhythmCard summary={summary} />
+                </div>
+              )}
             </div>
           </motion.section>
         </motion.div>

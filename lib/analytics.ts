@@ -59,6 +59,7 @@ const goalImages: Record<GoalCategory, string> = {
   trip: "/goal-categories/trip.webp",
   gift: "/goal-categories/gift.webp",
   house: "/goal-categories/house.webp",
+  laptop: "/goal-categories/laptop.webp",
   boat: "/goal-categories/boat.webp",
   "gaming-console": "/goal-categories/gaming-console.webp",
   watch: "/goal-categories/watch.webp",
@@ -114,29 +115,9 @@ function sumByType(items: MoneyItem[], type: MoneyItem["type"], currency: Analyt
   return items.reduce((total, item) => total + (item.type === type ? amountInCurrency(item, currency, rate) : 0), 0);
 }
 
-function fallbackGoals(currency: AnalyticsCurrency, rate: number): AnalyticsGoal[] {
-  const targetToman = 300000000;
-  const savedToman = 126000000;
-  const monthlyToman = 12000000;
-  const convert = (value: number) => (currency === "USD" ? value / rate : value);
-
-  return [
-    {
-      id: "demo-dubai-trip",
-      title: "Dubai Trip",
-      category: "trip",
-      progress: 42,
-      saved: convert(savedToman),
-      target: convert(targetToman),
-      monthlyProgress: convert(monthlyToman),
-      monthsLeft: 8
-    }
-  ];
-}
-
-function deriveGoals(items: MoneyItem[], currency: AnalyticsCurrency, rate: number, savingsTotal: number, hasRealData: boolean) {
+function deriveGoals(items: MoneyItem[], currency: AnalyticsCurrency, rate: number, savingsTotal: number) {
   const goals = items.filter((item) => item.type === "goal");
-  if (!goals.length) return hasRealData ? [] : fallbackGoals(currency, rate);
+  if (!goals.length) return [];
 
   return goals.map((goal, index) => {
     const target = targetInCurrency(goal, currency, rate) || amountInCurrency(goal, currency, rate) || (currency === "USD" ? 3200 : 300000000);
@@ -157,7 +138,7 @@ function deriveGoals(items: MoneyItem[], currency: AnalyticsCurrency, rate: numb
   });
 }
 
-function deriveLeaks(items: MoneyItem[], currency: AnalyticsCurrency, rate: number, expenseTotal: number, hasRealData: boolean) {
+function deriveLeaks(items: MoneyItem[], currency: AnalyticsCurrency, rate: number) {
   const expenseItems = items
     .filter((item) => item.type === "expense")
     .map((item) => ({
@@ -171,24 +152,10 @@ function deriveLeaks(items: MoneyItem[], currency: AnalyticsCurrency, rate: numb
     return acc;
   }, {});
 
-  const derived = Object.entries(grouped)
+  return Object.entries(grouped)
     .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value);
-
-  if (derived.length >= 4) return derived.slice(0, 5);
-
-  if (hasRealData) return derived;
-
-  const base = expenseTotal || (currency === "USD" ? 6650 : 630000000);
-  const defaults: MoneyLeak[] = [
-    { label: "Rent", value: base * 0.42 },
-    { label: "Food Delivery", value: base * 0.2 },
-    { label: "Subscriptions", value: base * 0.13 },
-    { label: "Coffee & Snacks", value: base * 0.1 },
-    { label: "Others", value: base * 0.15 }
-  ];
-
-  return [...derived, ...defaults.filter((item) => !derived.some((entry) => entry.label === item.label))].slice(0, 5);
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
 }
 
 const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -215,23 +182,13 @@ export function getAnalyticsSummary(
   selectedMonth: string
 ): AnalyticsSummary {
   const rate = usdToToman || FALLBACK_USD_TO_TOMAN;
-  const hasRealData = items.length > 0;
 
-  const incomeTotal = hasRealData
-    ? sumByType(items, "income", currency, rate)
-    : currency === "USD" ? 8900 : 840000000;
-
-  const expenseTotal = hasRealData
-    ? sumByType(items, "expense", currency, rate)
-    : currency === "USD" ? 6650 : 630000000;
-
-  const savingsTotal = hasRealData
-    ? sumByType(items, "savings", currency, rate)
-    : currency === "USD" ? 1335 : 126000000;
-
+  const incomeTotal = sumByType(items, "income", currency, rate);
+  const expenseTotal = sumByType(items, "expense", currency, rate);
+  const savingsTotal = sumByType(items, "savings", currency, rate);
   const goalTotal = sumByType(items, "goal", currency, rate);
-  const goals = deriveGoals(items, currency, rate, savingsTotal, hasRealData);
-  const leaks = deriveLeaks(items, currency, rate, expenseTotal, hasRealData);
+  const goals = deriveGoals(items, currency, rate, savingsTotal);
+  const leaks = deriveLeaks(items, currency, rate);
   const monthlyIncome = deriveMonthlyIncome(incomeTotal, selectedMonth);
   const sixMonthAverage = monthlyIncome.reduce((total, month) => total + month.value, 0) / monthlyIncome.length;
 

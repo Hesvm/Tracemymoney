@@ -56,6 +56,11 @@ type MoneyMapStore = {
   calendarSystem: CalendarSystem;
   settings: AppSettings;
   exchangeRate: ExchangeRateState;
+  // Tracks when the USER last mutated real data. Never advanced by sync
+  // operations, exchange-rate updates, or pure-UI state changes. Used as
+  // metadata.updatedAt so the last-write-wins merge compares meaningful
+  // timestamps instead of "last time the subscription serialised the store."
+  lastModifiedAt: string;
   selectedEdgeId: string | null;
   focusedNodeId: string | null;
   pendingAddNodeId: string | null;
@@ -132,6 +137,8 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     pendingAddNodeId: null,
     contextMenu: { open: false, x: 0, y: 0, target: null },
     exchangeRate: { usdToToman: null, fetchedAt: null, isLoading: false },
+    // Epoch zero → any real cloud data wins on first open for a new device
+    lastModifiedAt: "1970-01-01T00:00:00.000Z",
 
     addItemFromForm: (payload) => {
       const now = new Date().toISOString();
@@ -153,7 +160,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
             !state.edges.some((e) => e.source === payload.parentNodeId && e.target === targetNodeId)
               ? [...state.edges, createEdge(payload.parentNodeId, targetNodeId)]
               : state.edges;
-          return { nodes, edges };
+          return { nodes, edges, lastModifiedAt: now };
         });
         return;
       }
@@ -224,7 +231,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
           edges = [...edges, createEdge(source, targetNodeId)];
         }
 
-        return { items: [...state.items, item], nodes, edges };
+        return { items: [...state.items, item], nodes, edges, lastModifiedAt: now };
       });
     },
 
@@ -246,7 +253,9 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
         const currentNodeId = state.nodes.find((n) => n.data.itemIds.includes(itemId))?.id;
         const nextParentId = payload.parentNodeId || fallbackNodeId || currentNodeId;
 
+        const mutatedAt = new Date().toISOString();
         return {
+          lastModifiedAt: mutatedAt,
           items: state.items.map((i) =>
             i.id === itemId
               ? {
@@ -260,7 +269,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
                   recurrence: payload.type === "goal" ? "none" : payload.recurrence,
                   parentId: payload.parentNodeId || undefined,
                   category: payload.type === "goal" ? payload.category : undefined,
-                  updatedAt: new Date().toISOString(),
+                  updatedAt: mutatedAt,
                 }
               : i
           ),
@@ -289,6 +298,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
         };
         const parentNodeId = item.parentId ?? nodeIdByType[item.type];
         return {
+          lastModifiedAt: now,
           items: [...state.items, copiedItem],
           nodes: state.nodes.map((n) =>
             n.id === parentNodeId
@@ -301,6 +311,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
     deleteItem: (itemId) => {
       set((state) => ({
+        lastModifiedAt: new Date().toISOString(),
         items: state.items.filter((i) => i.id !== itemId),
         nodes: state.nodes.map((n) => ({
           ...n,
@@ -314,6 +325,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       const trimmed = title.trim();
       if (!trimmed) return;
       set((state) => ({
+        lastModifiedAt: new Date().toISOString(),
         nodes: state.nodes.map((n) =>
           n.id === nodeId ? { ...n, data: { ...n.data, title: trimmed } } : n
         ),
@@ -333,7 +345,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
           position: { x: node.position.x + 34, y: node.position.y + 34 },
           data: { ...node.data, title: `${node.data.title} copy`, itemIds: [] },
         };
-        return { nodes: [...state.nodes, copy], selectedEdgeId: null };
+        return { lastModifiedAt: new Date().toISOString(), nodes: [...state.nodes, copy], selectedEdgeId: null };
       });
     },
 
@@ -344,6 +356,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
         if (!node) return state;
         const itemIds = new Set(node.data.itemIds);
         return {
+          lastModifiedAt: new Date().toISOString(),
           nodes: state.nodes.filter((n) => n.id !== nodeId),
           edges: state.edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
           items: state.items.filter((i) => !itemIds.has(i.id)),
@@ -377,7 +390,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     updateSettings: (settings) =>
       set((state) => {
         const nextSettings = { ...state.settings, ...settings };
-        return { settings: nextSettings, calendarSystem: nextSettings.calendarSystem };
+        return { lastModifiedAt: new Date().toISOString(), settings: nextSettings, calendarSystem: nextSettings.calendarSystem };
       }),
 
     setSelectedEdgeId: (edgeId) => set({ selectedEdgeId: edgeId }),
@@ -386,12 +399,14 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     resetLocalData: () => {
       set((state) => ({
         ...resetUserCreatedData({ items: state.items, nodes: state.nodes, edges: state.edges }),
+        lastModifiedAt: new Date().toISOString(),
         selectedEdgeId: null,
       }));
     },
 
     addEdge: (source, target) => {
       set((state) => ({
+        lastModifiedAt: new Date().toISOString(),
         edges: [
           ...state.edges,
           decorateEdge({ id: `edge-${source}-${target}-${Date.now()}`, source, target }),
@@ -402,6 +417,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
     deleteEdge: (edgeId) => {
       set((state) => ({
+        lastModifiedAt: new Date().toISOString(),
         edges: state.edges.filter((e) => e.id !== edgeId),
         selectedEdgeId: null,
       }));
@@ -414,6 +430,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       if (state.edges.some((e) => e.id !== edgeId && e.source === source && e.target === target))
         return false;
       set((state) => ({
+        lastModifiedAt: new Date().toISOString(),
         edges: state.edges.map((e) =>
           e.id === edgeId
             ? decorateEdge({
@@ -436,6 +453,11 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     setPendingAddNode: (nodeId) => set({ pendingAddNodeId: nodeId }),
 
     fetchExchangeRate: async () => {
+      const { fetchedAt } = get().exchangeRate;
+      if (fetchedAt) {
+        const ageMs = Date.now() - new Date(fetchedAt).getTime();
+        if (ageMs < 2 * 60 * 60 * 1000) return; // skip if fetched within 2 hours
+      }
       set((state) => ({ exchangeRate: { ...state.exchangeRate, isLoading: true, error: undefined } }));
       try {
         const usdToToman = await fetchUsdToTomanRate();

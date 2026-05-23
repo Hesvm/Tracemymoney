@@ -37,6 +37,7 @@ export const goalCategories: Array<{ value: GoalCategory; label: string; image: 
   { value: "trip", label: "Trip", image: "/goal-categories/trip.webp" },
   { value: "gift", label: "Gift", image: "/goal-categories/gift.webp" },
   { value: "house", label: "House", image: "/goal-categories/house.webp" },
+  { value: "laptop", label: "Laptop", image: "/goal-categories/laptop.webp" },
   { value: "boat", label: "Boat", image: "/goal-categories/boat-thiings-v2.webp" },
   { value: "gaming-console", label: "Gaming Console", image: "/goal-categories/gaming-console-thiings-v2.webp" },
   { value: "watch", label: "Watch", image: "/goal-categories/watch-thiings-v2.webp" },

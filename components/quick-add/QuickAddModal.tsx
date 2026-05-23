@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { todayIsoDate } from "@/lib/calendar";
+import { getAmountSuggestions, saveAmountSuggestion } from "@/lib/suggestions";
+import { formatPrimaryAmount } from "@/lib/formatters";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { Currency, GoalCategory, MoneyNodeType, RecurrenceType } from "@/types/money";
 import { AmountInput, CurrencySegmentedToggle, GoalCategoryChips, recurrenceOptions, StyledDatePicker, StyledDropdown } from "./FormControls";
@@ -32,12 +34,38 @@ function submitButtonClass(type: MoneyNodeType) {
   if (type === "income") {
     return "bg-[#e8f6dd] text-[#2d7f36] shadow-[0_12px_24px_rgba(69,160,71,0.14)] hover:bg-[#ddf1ce]";
   }
-
   if (type === "expense") {
     return "bg-[#f9dde2] text-[#d9344f] shadow-[0_12px_24px_rgba(217,52,79,0.12)] hover:bg-[#f6d1d8]";
   }
-
   return "bg-[#2f333b] text-white shadow-[0_12px_24px_rgba(47,51,59,0.14)] hover:bg-[#272b32]";
+}
+
+function SuggestionChips({
+  title,
+  currency,
+  onSelect
+}: {
+  title: string;
+  currency: Currency;
+  onSelect: (amount: number) => void;
+}) {
+  const suggestions = useMemo(() => getAmountSuggestions(title), [title]);
+  if (!suggestions.length) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {suggestions.map((amt) => (
+        <button
+          key={amt}
+          type="button"
+          className="rounded-full bg-[#f4f2ec] px-3 py-1 text-[13px] font-medium text-[#686d7a] transition hover:bg-[#ece9e1] active:scale-95"
+          onClick={() => onSelect(amt)}
+        >
+          {formatPrimaryAmount({ amount: amt, currency })}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function QuickAddModal({
@@ -64,7 +92,8 @@ export function QuickAddModal({
   const [amount, setAmount] = useState(0);
   const [date, setDate] = useState(() => todayIsoDate());
   const [parentNodeId, setParentNodeId] = useState("");
-  const [goalCategory, setGoalCategory] = useState<GoalCategory>("car");
+  const [goalCategory, setGoalCategory] = useState<GoalCategory>("phone");
+  const [titleValue, setTitleValue] = useState("");
   const [resetKey, setResetKey] = useState(0);
   const copy = activeType ? labels[activeType] : labels.income;
 
@@ -79,7 +108,8 @@ export function QuickAddModal({
     setAmount(0);
     setDate(todayIsoDate());
     setParentNodeId("");
-    setGoalCategory("car");
+    setGoalCategory("phone");
+    setTitleValue("");
     setResetKey((current) => current + 1);
   }
 
@@ -87,6 +117,7 @@ export function QuickAddModal({
     if (!open) return;
     if (!editItem) {
       setCurrency(defaultCurrency);
+      setTitleValue("");
       return;
     }
 
@@ -96,7 +127,8 @@ export function QuickAddModal({
     setDate(editItem.date ?? todayIsoDate());
     setRecurrence(editItem.recurrence ?? "none");
     setParentNodeId(editItem.parentId ?? "");
-    setGoalCategory(editItem.category ?? "car");
+    setGoalCategory(editItem.category ?? "phone");
+    setTitleValue(editItem.title ?? "");
     setResetKey((current) => current + 1);
   }, [defaultCurrency, editItem, open]);
 
@@ -105,6 +137,10 @@ export function QuickAddModal({
     if (!activeType) return;
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
+
+    if (title && amount && activeType !== "bucket") {
+      saveAmountSuggestion(title, amount);
+    }
 
     const payload = {
       type: activeType,
@@ -171,25 +207,35 @@ export function QuickAddModal({
               <div className="grid gap-4 pb-2">
                 <Field label={copy.subject}>
                   <input
-                    key={editItemId ?? "new-title"}
                     className={inputClass}
                     name="title"
                     placeholder={activeType === "income" ? "Salary" : copy.subject}
-                    defaultValue={editItem?.title ?? ""}
+                    value={titleValue}
+                    onChange={(e) => setTitleValue(e.target.value)}
                     dir="auto"
                     required
                   />
                 </Field>
 
                 {activeType !== "bucket" && (
-                  <div className="grid grid-cols-[1fr_176px] gap-3">
-                    <Field label={copy.amount}>
-                      <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
-                    </Field>
-                    <Field label="Currency">
-                      <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
-                    </Field>
-                  </div>
+                  <>
+                    <div className="grid grid-cols-[1fr_176px] gap-3">
+                      <Field label={copy.amount}>
+                        <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
+                      </Field>
+                      <Field label="Currency">
+                        <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
+                      </Field>
+                    </div>
+                    <SuggestionChips
+                      title={titleValue}
+                      currency={currency}
+                      onSelect={(v) => {
+                        setAmount(v);
+                        setResetKey((k) => k + 1);
+                      }}
+                    />
+                  </>
                 )}
 
                 {activeType === "bucket" && (

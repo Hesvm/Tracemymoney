@@ -15,7 +15,7 @@ export interface AppSettings {
   softAnimations: boolean;
 }
 
-export type GoalCategory = "car" | "phone" | "trip" | "gift" | "house" | "boat" | "gaming-console" | "watch" | "other";
+export type GoalCategory = "car" | "phone" | "trip" | "gift" | "house" | "boat" | "gaming-console" | "watch" | "laptop" | "other";
 
 export interface MoneyAmount {
   amount: number;

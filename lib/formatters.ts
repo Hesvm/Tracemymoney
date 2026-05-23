@@ -10,15 +10,29 @@ export function formatPrimaryAmount(amount?: MoneyAmount) {
   return amount.currency === "USD" ? `$${formatted}` : `${formatted} T`;
 }
 
-export function formatConvertedAmount(amount?: MoneyAmount) {
-  if (!amount?.convertedAmount || !amount.convertedCurrency) return "~ $300 at time";
+export function formatConvertedAmount(amount?: MoneyAmount, liveRate?: number | null) {
+  if (!amount) return "";
 
-  const formatted = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: amount.convertedCurrency === "USD" ? 2 : 0
-  }).format(amount.convertedAmount);
+  if (amount.convertedAmount && amount.convertedCurrency) {
+    const formatted = new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: amount.convertedCurrency === "USD" ? 2 : 0
+    }).format(amount.convertedAmount);
+    const value = amount.convertedCurrency === "USD" ? `$${formatted}` : `${formatted} T`;
+    return `~ ${value} at time`;
+  }
 
-  const value = amount.convertedCurrency === "USD" ? `$${formatted}` : `${formatted} T`;
-  return `~ ${value} at time`;
+  if (liveRate && liveRate > 0) {
+    if (amount.currency === "USD") {
+      const toman = amount.amount * liveRate;
+      return `~ ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(toman)} T`;
+    }
+    if (amount.currency === "TOMAN") {
+      const usd = amount.amount / liveRate;
+      return `~ $${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usd)}`;
+    }
+  }
+
+  return "";
 }
 
 export function formatDateLabel(date?: string, calendarSystem: CalendarSystem = "shamsi") {
