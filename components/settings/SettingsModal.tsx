@@ -9,6 +9,7 @@ import { SettingsRow } from "@/components/settings/SettingsRow";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { SettingsToggle } from "@/components/settings/SettingsToggle";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { useAnimatedRate } from "@/hooks/useAnimatedRate";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import { useAuthStore } from "@/store/authStore";
 import { supabase } from "@/lib/supabaseClient";
@@ -36,6 +37,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const shouldAnimate = settings.softAnimations;
   const user = useAuthStore((state) => state.user);
   const [authOpen, setAuthOpen] = useState(false);
+  const { displayed: displayedRate } = useAnimatedRate(exchangeRate.usdToToman);
 
   useEffect(() => {
     if (!open) return;
@@ -128,7 +130,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
                 />
                 <SettingsRow
                   compact
-                  label={`USD rate: ${formatRate(exchangeRate.usdToToman)}`}
+                  label={`USD rate: ${formatRate(displayedRate)}`}
                   detail={exchangeRate.fetchedAt ? `Updated: ${formatUpdatedAt(exchangeRate.fetchedAt)}` : undefined}
                 >
                   <button
