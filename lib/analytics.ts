@@ -99,7 +99,7 @@ function amountInCurrency(item: MoneyItem, currency: AnalyticsCurrency, rate: nu
   const amount = item.amount;
   if (!amount) return 0;
   if (amount.currency === currency) return amount.amount;
-  if (amount.convertedCurrency === currency && typeof amount.convertedAmount === "number") return amount.convertedAmount;
+  if (amount.convertedCurrency === currency && typeof amount.convertedAmountAtEntry === "number") return amount.convertedAmountAtEntry;
   return currency === "USD" ? amount.amount / rate : amount.amount * rate;
 }
 
@@ -107,7 +107,7 @@ function targetInCurrency(item: MoneyItem, currency: AnalyticsCurrency, rate: nu
   const amount = item.targetAmount;
   if (!amount) return 0;
   if (amount.currency === currency) return amount.amount;
-  if (amount.convertedCurrency === currency && typeof amount.convertedAmount === "number") return amount.convertedAmount;
+  if (amount.convertedCurrency === currency && typeof amount.convertedAmountAtEntry === "number") return amount.convertedAmountAtEntry;
   return currency === "USD" ? amount.amount / rate : amount.amount * rate;
 }
 
