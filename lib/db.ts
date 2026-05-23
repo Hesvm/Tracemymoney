@@ -11,7 +11,7 @@ class MoneyMapDB extends Dexie {
   documents!: Table<LocalRecord, string>;
 
   constructor() {
-    super("trace-my-money");
+    super("money-map-db");
     this.version(1).stores({
       documents: "id",
     });

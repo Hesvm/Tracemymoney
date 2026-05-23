@@ -53,6 +53,8 @@ export function MoneyMapApp() {
   const nodes = useMoneyMapStore((state) => state.nodes);
   const contextMenu = useMoneyMapStore((state) => state.contextMenu);
   const closeContextMenu = useMoneyMapStore((state) => state.closeContextMenu);
+  const pendingAddNodeId = useMoneyMapStore((state) => state.pendingAddNodeId);
+  const setPendingAddNode = useMoneyMapStore((state) => state.setPendingAddNode);
   const { setUser, setLoaded } = useAuthStore();
   const setStatus = useSyncStore((state) => state.setStatus);
   const showToast = useToastStore((state) => state.showToast);
@@ -125,6 +127,17 @@ export function MoneyMapApp() {
   useEffect(() => {
     void fetchExchangeRate();
   }, [fetchExchangeRate]);
+
+  // Open QuickAddModal when + button clicked on a node
+  useEffect(() => {
+    if (!pendingAddNodeId) return;
+    const node = nodes.find((n) => n.id === pendingAddNodeId);
+    if (node) {
+      setEditItemId(null);
+      setModalType(node.data.type);
+    }
+    setPendingAddNode(null);
+  }, [pendingAddNodeId, nodes, setPendingAddNode]);
 
   function handleAddClick() {
     if (!menuOpen && addButtonRef.current) {

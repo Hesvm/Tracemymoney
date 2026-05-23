@@ -88,6 +88,34 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+              <SettingsSection title="Account">
+                {user ? (
+                  <>
+                    <SettingsRow label="Signed in as" detail={user.email ?? user.id}>
+                      <button
+                        type="button"
+                        onClick={() => void supabase.auth.signOut()}
+                        className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#c64141] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
+                      >
+                        <LogOut className="size-3.5" strokeWidth={2.1} />
+                        Sign out
+                      </button>
+                    </SettingsRow>
+                    <SettingsRow compact label="Sync status" detail="Changes are backed up automatically" />
+                  </>
+                ) : (
+                  <SettingsRow label="Cloud sync" detail="Sign in to back up across devices">
+                    <button
+                      type="button"
+                      onClick={() => setAuthOpen(true)}
+                      className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#6b665d] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
+                    >
+                      Sign in
+                    </button>
+                  </SettingsRow>
+                )}
+              </SettingsSection>
+
               <SettingsSection title="Currency">
                 <SegmentedSetting<Currency>
                   value={settings.defaultCurrency}
@@ -130,31 +158,6 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
               <SettingsSection title="Canvas">
                 <SettingsToggle label="Show canvas dots" checked={settings.showCanvasDots} onChange={(showCanvasDots) => updateSettings({ showCanvasDots })} />
                 <SettingsToggle label="Soft animations" checked={settings.softAnimations} onChange={(softAnimations) => updateSettings({ softAnimations })} />
-              </SettingsSection>
-
-              <SettingsSection title="Account">
-                {user ? (
-                  <SettingsRow label="Signed in" detail={user.email}>
-                    <button
-                      type="button"
-                      onClick={() => void supabase.auth.signOut()}
-                      className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#c64141] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
-                    >
-                      <LogOut className="size-3.5" strokeWidth={2.1} />
-                      Sign out
-                    </button>
-                  </SettingsRow>
-                ) : (
-                  <SettingsRow label="Cloud sync" detail="Sign in to back up across devices">
-                    <button
-                      type="button"
-                      onClick={() => setAuthOpen(true)}
-                      className="flex h-8 items-center gap-1.5 rounded-full bg-white px-3 text-[13px] font-semibold text-[#6b665d] shadow-[inset_0_0_0_1px_#ebe7dd] transition hover:bg-[#fbfaf7]"
-                    >
-                      Sign in
-                    </button>
-                  </SettingsRow>
-                )}
               </SettingsSection>
 
               <SettingsSection title="Data">

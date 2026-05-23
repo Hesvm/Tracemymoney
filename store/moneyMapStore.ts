@@ -58,6 +58,7 @@ type MoneyMapStore = {
   exchangeRate: ExchangeRateState;
   selectedEdgeId: string | null;
   focusedNodeId: string | null;
+  pendingAddNodeId: string | null;
   contextMenu: ContextMenuState;
   addItemFromForm: (payload: AddPayload) => void;
   updateItemFromForm: (itemId: string, payload: AddPayload) => void;
@@ -82,6 +83,7 @@ type MoneyMapStore = {
   reconnectEdge: (edgeId: string, newConnection: Connection) => boolean;
   openContextMenu: (x: number, y: number, target: ContextMenuTarget) => void;
   closeContextMenu: () => void;
+  setPendingAddNode: (nodeId: string | null) => void;
 };
 
 const nodeIdByType: Partial<Record<MoneyNodeType, string>> = {
@@ -124,6 +126,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     settings: defaultAppSettings,
     selectedEdgeId: null,
     focusedNodeId: null,
+    pendingAddNodeId: null,
     contextMenu: { open: false, x: 0, y: 0, target: null },
     exchangeRate: { usdToToman: null, fetchedAt: null, isLoading: false },
 
@@ -427,6 +430,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       set({ contextMenu: { open: true, x, y, target }, selectedEdgeId: null }),
     closeContextMenu: () =>
       set((state) => ({ contextMenu: { ...state.contextMenu, open: false } })),
+    setPendingAddNode: (nodeId) => set({ pendingAddNodeId: nodeId }),
 
     fetchExchangeRate: async () => {
       set((state) => ({ exchangeRate: { ...state.exchangeRate, isLoading: true, error: undefined } }));

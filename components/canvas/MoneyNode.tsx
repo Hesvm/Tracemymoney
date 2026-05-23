@@ -9,12 +9,12 @@ import { isItemInMonth } from "@/lib/months";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { MoneyFlowNode, MoneyItem, MoneyNodeType } from "@/types/money";
 
-const nodeStyles: Record<MoneyNodeType, { pill: string; icon: React.ElementType }> = {
-  income: { pill: "bg-[#e8f6dd] text-[#2d7f36]", icon: ArrowDown },
-  expense: { pill: "bg-[#f9dde2] text-[#d9344f]", icon: ArrowUp },
-  savings: { pill: "bg-[#fff1d7] text-[#a16325]", icon: PiggyBank },
-  goal: { pill: "bg-[#fff1d7] text-[#a16325]", icon: Goal },
-  bucket: { pill: "bg-[#f7e6e2] text-[#8b625a]", icon: PiggyBank }
+const nodeStyles: Record<MoneyNodeType, { pill: string; iconBg: string; icon: React.ElementType }> = {
+  income: { pill: "bg-[#e8f6dd] text-[#2d7f36]", iconBg: "bg-[#2d7f36]", icon: ArrowDown },
+  expense: { pill: "bg-[#f9dde2] text-[#d9344f]", iconBg: "bg-[#d9344f]", icon: ArrowUp },
+  savings: { pill: "bg-[#fff1d7] text-[#a16325]", iconBg: "bg-[#a16325]", icon: PiggyBank },
+  goal: { pill: "bg-[#fff1d7] text-[#a16325]", iconBg: "bg-[#a16325]", icon: Goal },
+  bucket: { pill: "bg-[#f7e6e2] text-[#8b625a]", iconBg: "bg-[#8b625a]", icon: PiggyBank }
 };
 
 function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
@@ -27,12 +27,10 @@ function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
           <Image src="/icons/savings-piggy.webp" alt="" width={20} height={20} className="size-5 object-cover" aria-hidden="true" />
         </span>
       )}
-      {type !== "bucket" && (
-        type !== "savings" && (
-          <span className="grid size-5 place-items-center rounded-full bg-current text-white">
-            <Icon className="size-3.5 text-white" strokeWidth={2.4} />
-          </span>
-        )
+      {type !== "bucket" && type !== "savings" && (
+        <span className={`grid size-5 place-items-center rounded-full ${nodeStyles[type].iconBg}`}>
+          <Icon className="size-3.5 text-white" strokeWidth={2.4} />
+        </span>
       )}
       <span className="font-serif italic leading-none">{title}</span>
     </div>
@@ -113,6 +111,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
   const calendarSystem = useMoneyMapStore((state) => state.calendarSystem);
   const selectedMonth = useMoneyMapStore((state) => state.selectedMonth);
   const focusedNodeId = useMoneyMapStore((state) => state.focusedNodeId);
+  const setPendingAddNode = useMoneyMapStore((state) => state.setPendingAddNode);
   const nodeItems = data.itemIds
     .map((id) => items.find((item) => item.id === id))
     .filter((item): item is MoneyItem => Boolean(item))
@@ -121,7 +120,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
 
   return (
     <article
-      className={`money-node group w-[330px] rounded-[28px] bg-white/95 px-5 pb-6 pt-5 shadow-soft backdrop-blur transition ${
+      className={`money-node group w-[430px] rounded-[28px] bg-white/95 px-5 pb-6 pt-5 shadow-soft backdrop-blur transition ${
         isFocused ? "ring-4 ring-[#d8cdb9]/70" : ""
       }`}
       onMouseEnter={() => setIsHovering(true)}
@@ -142,14 +141,13 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
 
       <div className="mb-6 flex items-center justify-between">
         <NodeBadge type={data.type} title={data.title} />
-        {data.type !== "bucket" && (
-          <button
-            className="grid size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
-            aria-label={`Add ${data.title}`}
-          >
-            <Plus className="size-5" strokeWidth={2.2} />
-          </button>
-        )}
+        <button
+          className="nodrag grid size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
+          aria-label={`Add to ${data.title}`}
+          onClick={() => setPendingAddNode(id)}
+        >
+          <Plus className="size-5" strokeWidth={2.2} />
+        </button>
       </div>
       <ul className="space-y-2">
         {!data.collapsed && nodeItems.length > 0 ? (
