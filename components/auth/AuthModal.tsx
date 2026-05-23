@@ -16,6 +16,7 @@ type Step = "idle" | "loading" | "sent" | "error";
 export function AuthModal({ open, onClose }: AuthModalProps) {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<Step>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   if (!open) return null;
 
@@ -27,7 +28,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       email: email.trim(),
       options: { emailRedirectTo: window.location.origin },
     });
-    setStep(error ? "error" : "sent");
+    if (error) {
+      setErrorMsg(error.message);
+      setStep("error");
+    } else {
+      setStep("sent");
+    }
   }
 
   return createPortal(
@@ -103,7 +109,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
               {step === "error" && (
                 <p className="mt-3 text-center text-[13px] text-[#c64141]">
-                  Something went wrong. Please try again.
+                  {errorMsg || "Something went wrong. Please try again."}
                 </p>
               )}
             </>
