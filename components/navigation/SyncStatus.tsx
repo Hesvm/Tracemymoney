@@ -23,8 +23,10 @@ export function SyncStatus() {
   const status = useSyncStore((state) => state.status);
   const isLoaded = useAuthStore((state) => state.isLoaded);
 
-  // Don't flash status before auth has resolved
-  if (!isLoaded) return null;
+  const user = useAuthStore((state) => state.user);
+
+  // Only show when signed in or on meaningful non-local states
+  if (!isLoaded || (!user && (status === "local-only" || status === "offline"))) return null;
 
   return (
     <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#a0a3ae]">

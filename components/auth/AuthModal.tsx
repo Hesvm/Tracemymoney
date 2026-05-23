@@ -40,7 +40,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl">
+      <div className="relative mx-4 w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl" style={{ maxHeight: "90dvh" }}>
         <button
           type="button"
           onClick={onClose}
