@@ -8,7 +8,8 @@ import {
   useStoreApi,
   useViewport,
   type Connection,
-  type Edge
+  type Edge,
+  type Node
 } from "@xyflow/react";
 import { MoneyEdge } from "@/components/canvas/MoneyEdge";
 import { MoneyNode } from "@/components/canvas/MoneyNode";
@@ -54,6 +55,7 @@ function CanvasInner() {
   const showCanvasDots = useMoneyMapStore((state) => state.settings.showCanvasDots);
   const focusedNodeId = useMoneyMapStore((state) => state.focusedNodeId);
   const focusNode = useMoneyMapStore((state) => state.focusNode);
+  const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
   const rfStore = useStoreApi();
   const reactFlow = useReactFlow();
 
@@ -126,6 +128,18 @@ function CanvasInner() {
     [reconnectEdge]
   );
 
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      openContextMenu(event.clientX, event.clientY, { type: "node", nodeId: node.id });
+    },
+    [openContextMenu]
+  );
+
+  const handlePaneContextMenu = useCallback((event: React.MouseEvent | MouseEvent) => {
+    event.preventDefault();
+  }, []);
+
   const edgesWithSelection = edges.map((edge) => ({
     ...edge,
     selected: edge.id === selectedEdgeId
@@ -161,6 +175,8 @@ function CanvasInner() {
       onReconnect={handleReconnect}
       onReconnectEnd={handleReconnectEnd}
       reconnectRadius={20}
+      onNodeContextMenu={handleNodeContextMenu}
+      onPaneContextMenu={handlePaneContextMenu}
       defaultViewport={defaultViewport}
       minZoom={0.15}
       maxZoom={3.5}

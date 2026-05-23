@@ -59,6 +59,7 @@ export interface MoneyNodeData extends Record<string, unknown> {
   title: string;
   itemIds: string[];
   category?: GoalCategory;
+  collapsed?: boolean;
 }
 
 export type MoneyFlowNode = Node<MoneyNodeData, "moneyNode">;

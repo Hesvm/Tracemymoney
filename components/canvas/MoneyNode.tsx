@@ -39,12 +39,28 @@ function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
   );
 }
 
-function MoneyRow({ item, calendarSystem }: { item: MoneyItem; calendarSystem: "shamsi" | "gregorian" }) {
+function MoneyRow({
+  item,
+  nodeId,
+  calendarSystem
+}: {
+  item: MoneyItem;
+  nodeId: string;
+  calendarSystem: "shamsi" | "gregorian";
+}) {
   const primary = formatPrimaryAmount(item.amount);
   const title = item.title ? ` :: ${item.title}` : "";
+  const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
 
   return (
-    <li className="grid grid-cols-[1fr_auto] gap-7">
+    <li
+      className="nodrag grid grid-cols-[1fr_auto] gap-7 rounded-[14px] px-2 py-1.5 -mx-2 transition hover:bg-[#fbfaf7]"
+      onContextMenu={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openContextMenu(event.clientX, event.clientY, { type: "item", nodeId, itemId: item.id });
+      }}
+    >
       <div className="min-w-0">
         <div className="truncate text-[17px] font-semibold leading-[1.15] tracking-[-0.01em] text-[#2f333b]">
           {primary}
@@ -135,13 +151,17 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
           </button>
         )}
       </div>
-      <ul className="space-y-4">
-        {nodeItems.length > 0 ? (
+      <ul className="space-y-2">
+        {!data.collapsed && nodeItems.length > 0 ? (
           nodeItems.map((item) => (
-            <MoneyRow key={item.id} item={item} calendarSystem={calendarSystem} />
+            <MoneyRow key={item.id} item={item} nodeId={id} calendarSystem={calendarSystem} />
           ))
-        ) : (
+        ) : !data.collapsed ? (
           <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">No items this month</li>
+        ) : (
+          <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">
+            {nodeItems.length} item{nodeItems.length === 1 ? "" : "s"} hidden
+          </li>
         )}
       </ul>
     </article>

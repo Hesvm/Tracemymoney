@@ -42,17 +42,23 @@ function submitButtonClass(type: MoneyNodeType) {
 
 export function QuickAddModal({
   type,
+  editItemId,
   open,
   onClose
 }: {
   type: MoneyNodeType | null;
+  editItemId?: string | null;
   open: boolean;
   onClose: () => void;
 }) {
   const addItemFromForm = useMoneyMapStore((state) => state.addItemFromForm);
+  const updateItemFromForm = useMoneyMapStore((state) => state.updateItemFromForm);
+  const items = useMoneyMapStore((state) => state.items);
   const nodes = useMoneyMapStore((state) => state.nodes);
   const calendarSystem = useMoneyMapStore((state) => state.calendarSystem);
   const defaultCurrency = useMoneyMapStore((state) => state.settings.defaultCurrency);
+  const editItem = editItemId ? items.find((item) => item.id === editItemId) : null;
+  const activeType = editItem?.type ?? type;
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
   const [amount, setAmount] = useState(0);
@@ -60,7 +66,7 @@ export function QuickAddModal({
   const [parentNodeId, setParentNodeId] = useState("");
   const [goalCategory, setGoalCategory] = useState<GoalCategory>("car");
   const [resetKey, setResetKey] = useState(0);
-  const copy = type ? labels[type] : labels.income;
+  const copy = activeType ? labels[activeType] : labels.income;
 
   const parentOptions = useMemo(
     () => [{ value: "", label: "No parent" }, ...nodes.map((node) => ({ value: node.id, label: node.data.title }))],
@@ -78,27 +84,46 @@ export function QuickAddModal({
   }
 
   useEffect(() => {
-    if (open) setCurrency(defaultCurrency);
-  }, [defaultCurrency, open]);
+    if (!open) return;
+    if (!editItem) {
+      setCurrency(defaultCurrency);
+      return;
+    }
+
+    const amountValue = editItem.type === "goal" ? editItem.targetAmount : editItem.amount;
+    setCurrency(amountValue?.currency ?? defaultCurrency);
+    setAmount(amountValue?.amount ?? 0);
+    setDate(editItem.date ?? todayIsoDate());
+    setRecurrence(editItem.recurrence ?? "none");
+    setParentNodeId(editItem.parentId ?? "");
+    setGoalCategory(editItem.category ?? "car");
+    setResetKey((current) => current + 1);
+  }, [defaultCurrency, editItem, open]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!type) return;
+    if (!activeType) return;
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
 
-    addItemFromForm({
-      type,
+    const payload = {
+      type: activeType,
       title,
-      amount: type === "bucket" ? undefined : amount,
-      targetAmount: type === "goal" ? amount : undefined,
+      amount: activeType === "bucket" ? undefined : amount,
+      targetAmount: activeType === "goal" ? amount : undefined,
       currency,
       date,
       note: String(form.get("note") ?? ""),
-      recurrence: type === "goal" ? "none" : recurrence,
+      recurrence: activeType === "goal" ? "none" : recurrence,
       parentNodeId: parentNodeId || undefined,
-      category: type === "goal" ? goalCategory : undefined
-    });
+      category: activeType === "goal" ? goalCategory : undefined
+    };
+
+    if (editItemId) {
+      updateItemFromForm(editItemId, payload);
+    } else {
+      addItemFromForm(payload);
+    }
 
     event.currentTarget.reset();
     resetForm();
@@ -107,7 +132,7 @@ export function QuickAddModal({
 
   return (
     <AnimatePresence>
-      {open && type && (
+      {open && activeType && (
         <motion.div
           className="fixed inset-0 z-40 grid place-items-center bg-[#2f333b]/14 px-5 backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
@@ -126,7 +151,9 @@ export function QuickAddModal({
             onSubmit={submit}
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#2f333b]">{copy.title}</h2>
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#2f333b]">
+                {editItemId ? copy.title.replace("Add", "Edit") : copy.title}
+              </h2>
               <button
                 type="button"
                 onClick={onClose}
@@ -139,10 +166,17 @@ export function QuickAddModal({
 
             <div className="grid gap-4">
               <Field label={copy.subject}>
-                <input className={inputClass} name="title" placeholder={type === "income" ? "Salary" : copy.subject} required />
+                <input
+                  key={editItemId ?? "new-title"}
+                  className={inputClass}
+                  name="title"
+                  placeholder={activeType === "income" ? "Salary" : copy.subject}
+                  defaultValue={editItem?.title ?? ""}
+                  required
+                />
               </Field>
 
-              {type !== "bucket" && (
+              {activeType !== "bucket" && (
                 <div className="grid grid-cols-[1fr_176px] gap-3">
                   <Field label={copy.amount}>
                     <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
@@ -153,13 +187,13 @@ export function QuickAddModal({
                 </div>
               )}
 
-              {type === "bucket" && (
+              {activeType === "bucket" && (
                 <Field label="Parent">
                   <StyledDropdown value={parentNodeId} options={parentOptions} onChange={setParentNodeId} label="Parent" />
                 </Field>
               )}
 
-              {type !== "bucket" && (
+              {activeType !== "bucket" && (
                 <>
                   <Field label="Date">
                     <StyledDatePicker value={date} onChange={setDate} calendarSystem={calendarSystem} />
@@ -167,7 +201,7 @@ export function QuickAddModal({
                 </>
               )}
 
-              {type !== "bucket" && type !== "goal" && (
+              {activeType !== "bucket" && activeType !== "goal" && (
                 <>
                   <Field label="Recurring">
                     <StyledDropdown value={recurrence} options={recurrenceOptions} onChange={setRecurrence} label="Recurring" />
@@ -175,22 +209,28 @@ export function QuickAddModal({
                 </>
               )}
 
-              {type === "goal" && (
+              {activeType === "goal" && (
                 <Field label="Category">
                   <GoalCategoryChips value={goalCategory} onChange={setGoalCategory} />
                 </Field>
               )}
 
               <Field label="Note">
-                <textarea className={`${inputClass} h-24 resize-none rounded-xl py-3`} name="note" placeholder="Optional" />
+                <textarea
+                  key={editItemId ?? "new-note"}
+                  className={`${inputClass} h-24 resize-none rounded-xl py-3`}
+                  name="note"
+                  placeholder="Optional"
+                  defaultValue={editItem?.note ?? ""}
+                />
               </Field>
             </div>
 
             <button
               type="submit"
-              className={`mt-6 h-13 w-full rounded-full px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${submitButtonClass(type)}`}
+              className={`mt-6 h-13 w-full rounded-full px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
             >
-              {copy.submit}
+              {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
             </button>
           </motion.form>
         </motion.div>
