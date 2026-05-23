@@ -38,10 +38,10 @@ export function SignInNudge() {
       <AnimatePresence>
         {visible && (
           <motion.div
-            className="fixed top-20 left-1/2 z-30 -translate-x-1/2 pointer-events-auto"
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            className="fixed bottom-28 left-1/2 z-30 -translate-x-1/2 pointer-events-auto"
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <div className="flex items-center gap-2.5 rounded-full bg-white px-3 py-2.5 shadow-dock whitespace-nowrap">
