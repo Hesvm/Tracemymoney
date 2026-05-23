@@ -2,7 +2,7 @@
 
 import { applyEdgeChanges, applyNodeChanges, type Connection, type EdgeChange, type NodeChange } from "@xyflow/react";
 import { create } from "zustand";
-import { createMoneyAmount } from "@/lib/currency";
+import { createLockedAmount, createLiveAmount } from "@/lib/currency";
 import { createEdge, decorateEdge } from "@/lib/edges";
 import { fetchUsdToTomanRate } from "@/lib/exchangeRate";
 import { createId } from "@/lib/ids";
@@ -166,13 +166,18 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       }
 
       const currency = payload.currency ?? get().settings.defaultCurrency;
+      const isHistorical = payload.type === "income" || payload.type === "expense";
       const moneyAmount =
         payload.amount !== undefined
-          ? createMoneyAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+          ? isHistorical
+            ? createLockedAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+            : createLiveAmount(payload.amount, currency)
           : undefined;
       const targetAmount =
         payload.targetAmount !== undefined
-          ? createMoneyAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+          ? isHistorical
+            ? createLockedAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+            : createLiveAmount(payload.targetAmount, currency)
           : undefined;
       const item: MoneyItem = {
         id: createId("item"),
@@ -237,13 +242,18 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
     updateItemFromForm: (itemId, payload) => {
       const currency = payload.currency ?? get().settings.defaultCurrency;
+      const isHistorical = payload.type === "income" || payload.type === "expense";
       const moneyAmount =
         payload.amount !== undefined
-          ? createMoneyAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+          ? isHistorical
+            ? createLockedAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+            : createLiveAmount(payload.amount, currency)
           : undefined;
       const targetAmount =
         payload.targetAmount !== undefined
-          ? createMoneyAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+          ? isHistorical
+            ? createLockedAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+            : createLiveAmount(payload.targetAmount, currency)
           : undefined;
 
       set((state) => {
@@ -461,7 +471,35 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       set((state) => ({ exchangeRate: { ...state.exchangeRate, isLoading: true, error: undefined } }));
       try {
         const usdToToman = await fetchUsdToTomanRate();
-        set({ exchangeRate: { usdToToman, fetchedAt: new Date().toISOString(), isLoading: false } });
+        set((state) => {
+          // Backfill: stamp convertedAmountAtEntry on income/expense items that are missing it.
+          // Does not advance lastModifiedAt — this is not a user mutation.
+          const needsBackfill = state.items.some(
+            (item) =>
+              (item.type === "income" || item.type === "expense") &&
+              item.amount &&
+              item.amount.convertedAmountAtEntry == null
+          );
+          const items = needsBackfill
+            ? state.items.map((item) => {
+                if (
+                  (item.type === "income" || item.type === "expense") &&
+                  item.amount &&
+                  item.amount.convertedAmountAtEntry == null
+                ) {
+                  return {
+                    ...item,
+                    amount: createLockedAmount(item.amount.amount, item.amount.currency, usdToToman),
+                  };
+                }
+                return item;
+              })
+            : state.items;
+          return {
+            exchangeRate: { usdToToman, fetchedAt: new Date().toISOString(), isLoading: false },
+            items,
+          };
+        });
       } catch (error) {
         set((state) => ({
           exchangeRate: {
