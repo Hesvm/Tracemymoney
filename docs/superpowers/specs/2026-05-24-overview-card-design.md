@@ -83,7 +83,7 @@ In `AnalyticsModal.tsx`, insert `<OverviewCard>` between `<MoneyFlowReplay>` and
 
 **Month label language:**
 - `calendarSystem === "gregorian"` → abbreviated English month names (`Jan` … `Dec`)
-- `calendarSystem === "shamsi"` → abbreviated Shamsi month names (فرو، ارد، خرد، تیر، مرد، شهر، مهر، آبا، آذر، دی، بهم، اسف)
+- `calendarSystem === "shamsi"` → use the already-exported `shamsiMonthAbbr` array from `lib/months.ts` (`Far Ord Kho Tir Mor Sha Mhr Abn Azr Dey Bah Esf`) — same source as the navbar
 
 ---
 
