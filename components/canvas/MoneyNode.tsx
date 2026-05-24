@@ -4,11 +4,13 @@ import { ArrowDown, ArrowUp, Goal, PiggyBank, Plus } from "lucide-react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Image from "next/image";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { formatConvertedAmount, formatDateLabel, formatPrimaryAmount } from "@/lib/formatters";
 import { formatShortDate, isItemInMonth } from "@/lib/months";
+import { getGoalImage } from "@/lib/analytics";
 import { useAnimatedRate } from "@/hooks/useAnimatedRate";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
+import { EmptyNodeAction } from "@/components/canvas/EmptyNodeAction";
 import type { MoneyFlowNode, MoneyItem, MoneyNodeType } from "@/types/money";
 
 const nodeStyles: Record<MoneyNodeType, { pill: string; iconBg: string; icon: React.ElementType }> = {
@@ -65,8 +67,13 @@ function MoneyRow({
   const isRecurring = item.recurrence && item.recurrence !== "none";
 
   return (
-    <li
+    <motion.li
       className="nodrag grid grid-cols-[1fr_auto] gap-7 rounded-[14px] px-2 py-1.5 -mx-2 transition hover:bg-[#fbfaf7]"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      layout
       onContextMenu={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -100,38 +107,98 @@ function MoneyRow({
           formatDateLabel(item.date, calendarSystem)
         )}
       </div>
+    </motion.li>
+  );
+}
+
+function GoalRow({ item, nodeId }: { item: MoneyItem; nodeId: string }) {
+  const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
+  const category = item.category ?? "other";
+  const targetAmt = item.targetAmount ?? item.amount;
+  const savedAmt = item.amount;
+
+  const target = targetAmt?.amount ?? 0;
+  const saved = savedAmt && item.targetAmount ? Math.min(target, savedAmt.amount) : 0;
+  const progress = target > 0 && saved > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+
+  const circumference = 2 * Math.PI * 22;
+  const dash = (progress / 100) * circumference;
+
+  return (
+    <li
+      className="nodrag"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openContextMenu(e.clientX, e.clientY, { type: "item", nodeId, itemId: item.id });
+      }}
+    >
+      <article className="grid grid-cols-[56px_1fr_auto] items-center gap-4 rounded-[24px] bg-[#fbfaf7] p-3.5">
+        <div className="grid size-14 place-items-center overflow-hidden rounded-[20px] bg-white shadow-[0_10px_24px_rgba(76,74,68,0.08)]">
+          <Image src={getGoalImage(category)} alt="" width={48} height={48} className="size-12 object-contain" aria-hidden="true" />
+        </div>
+
+        <div className="min-w-0">
+          <div className="truncate text-[17px] font-semibold leading-none tracking-[-0.02em] text-[#2f333b]">{item.title || "Goal"}</div>
+          <div className="mt-2 text-[13px] font-medium text-[#8d919e]">
+            {formatPrimaryAmount(targetAmt)}
+          </div>
+        </div>
+
+        <div className="relative grid size-14 place-items-center">
+          <svg className="absolute inset-0 size-14 -rotate-90" viewBox="0 0 56 56" aria-hidden="true">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="#eee7da" strokeWidth="7" />
+            <circle
+              cx="28"
+              cy="28"
+              r="22"
+              fill="none"
+              stroke="#d6a45c"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeDasharray={`${dash} ${circumference}`}
+            />
+          </svg>
+          <span className="text-[13px] font-bold text-[#2f333b]">{progress}%</span>
+        </div>
+      </article>
     </li>
   );
 }
 
+const positionKey: Record<Position, string> = {
+  [Position.Top]: "top",
+  [Position.Right]: "right",
+  [Position.Bottom]: "bottom",
+  [Position.Left]: "left",
+};
+
+const handleStyle = {
+  width: 10,
+  height: 10,
+  borderRadius: "999px",
+  background: "#fffaf2",
+  border: "1px solid rgba(60, 55, 45, 0.18)",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+};
+
 function NodeHandle({ position }: { position: Position }) {
+  const side = positionKey[position];
   return (
     <>
       <Handle
+        id={`${side}-source`}
         type="source"
         position={position}
         className="node-handle opacity-0 transition-opacity duration-160"
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: "999px",
-          background: "#fffaf2",
-          border: "1px solid rgba(60, 55, 45, 0.18)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
-        }}
+        style={handleStyle}
       />
       <Handle
+        id={`${side}-target`}
         type="target"
         position={position}
         className="node-handle opacity-0 transition-opacity duration-160"
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: "999px",
-          background: "#fffaf2",
-          border: "1px solid rgba(60, 55, 45, 0.18)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
-        }}
+        style={handleStyle}
       />
     </>
   );
@@ -186,23 +253,42 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
         </button>
       </div>
       <ul className="space-y-2">
-        {!data.collapsed && nodeItems.length > 0 ? (
-          nodeItems.map((item) => (
-            <MoneyRow
-              key={item.id}
-              item={item}
-              nodeId={id}
-              calendarSystem={calendarSystem}
-              animatedRate={animatedRate}
-              rateTick={rateTick}
-            />
-          ))
-        ) : !data.collapsed ? (
-          <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">No items this month</li>
-        ) : (
+        {data.collapsed ? (
           <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">
             {nodeItems.length} item{nodeItems.length === 1 ? "" : "s"} hidden
           </li>
+        ) : (
+          <AnimatePresence initial={false} mode="sync">
+            {data.itemIds.length === 0 ? (
+              <EmptyNodeAction key="empty" type={data.type} onClick={() => setPendingAddNode(id)} />
+            ) : nodeItems.length > 0 ? (
+              nodeItems.map((item) =>
+                data.type === "goal" ? (
+                  <GoalRow key={item.id} item={item} nodeId={id} />
+                ) : (
+                  <MoneyRow
+                    key={item.id}
+                    item={item}
+                    nodeId={id}
+                    calendarSystem={calendarSystem}
+                    animatedRate={animatedRate}
+                    rateTick={rateTick}
+                  />
+                )
+              )
+            ) : (
+              <motion.li
+                key="no-items"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]"
+              >
+                No items this month
+              </motion.li>
+            )}
+          </AnimatePresence>
         )}
       </ul>
     </article>

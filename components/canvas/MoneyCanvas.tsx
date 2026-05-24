@@ -145,9 +145,15 @@ function CanvasInner() {
   );
 
   const handleReconnectEnd = useCallback(
-    (_: MouseEvent | TouchEvent, _oldEdge: Edge) => {
-      // If reconnect failed (dropped in empty space), the edge was already
-      // removed by onEdgesChange at drag start — it stays removed.
+    (_: MouseEvent | TouchEvent, oldEdge: Edge) => {
+      if (!reconnectSuccessful.current) {
+        // Reconnect was cancelled — restore the original edge that ReactFlow
+        // removed via onEdgesChange when the drag started.
+        useMoneyMapStore.setState((state) => {
+          if (state.edges.some((e) => e.id === oldEdge.id)) return state;
+          return { edges: [...state.edges, decorateEdge(oldEdge)] };
+        });
+      }
       reconnectSuccessful.current = false;
     },
     []
