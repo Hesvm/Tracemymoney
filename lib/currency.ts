@@ -1,6 +1,11 @@
-import type { Currency, MoneyAmount } from "@/types/money";
+import type { Currency, MoneyAmount, RateSource } from "@/types/money";
 
-export function createLockedAmount(amount: number, currency: Currency, rate: number | null): MoneyAmount {
+export function createLockedAmount(
+  amount: number,
+  currency: Currency,
+  rate: number | null,
+  rateSource: RateSource = "current_api"
+): MoneyAmount {
   if (!Number.isFinite(amount)) {
     return { amount: 0, currency };
   }
@@ -16,6 +21,7 @@ export function createLockedAmount(amount: number, currency: Currency, rate: num
       convertedAmountAtEntry: Math.round(amount * rate),
       convertedCurrency: "TOMAN",
       exchangeRateAtEntry: rate,
+      rateSource,
     };
   }
 
@@ -25,6 +31,7 @@ export function createLockedAmount(amount: number, currency: Currency, rate: num
     convertedAmountAtEntry: Number((amount / rate).toFixed(2)),
     convertedCurrency: "USD",
     exchangeRateAtEntry: rate,
+    rateSource,
   };
 }
 
