@@ -49,6 +49,10 @@ export type AnalyticsSummary = {
     tomanGrowthPct: number;
     usdGrowthPct: number;
   };
+  overviewTrend: {
+    income: MonthlyIncome[];
+    expense: MonthlyIncome[];
+  };
 };
 
 const FALLBACK_USD_TO_TOMAN = 94382;
@@ -160,9 +164,9 @@ function deriveLeaks(items: MoneyItem[], currency: AnalyticsCurrency, rate: numb
 
 const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function getLast6MonthLabels(selectedMonth: string): string[] {
-  return Array.from({ length: 6 }, (_, i) => {
-    const monthStr = shiftMonth(selectedMonth, i - 5);
+function getLastNMonthLabels(selectedMonth: string, n: number): string[] {
+  return Array.from({ length: n }, (_, i) => {
+    const monthStr = shiftMonth(selectedMonth, i - (n - 1));
     const monthIndex = parseInt(monthStr.split("-")[1], 10) - 1;
     return monthAbbreviations[monthIndex];
   });
@@ -171,8 +175,20 @@ function getLast6MonthLabels(selectedMonth: string): string[] {
 function deriveMonthlyIncome(currentIncome: number, selectedMonth: string) {
   const base = currentIncome || 1;
   const multipliers = [0.72, 0.84, 0.79, 0.93, 0.88, 1];
-  const labels = getLast6MonthLabels(selectedMonth);
+  const labels = getLastNMonthLabels(selectedMonth, 6);
   return labels.map((label, index) => ({ label, value: base * multipliers[index] }));
+}
+
+function deriveOverviewTrend(incomeTotal: number, expenseTotal: number, selectedMonth: string) {
+  const incomeBase = incomeTotal || 1;
+  const expenseBase = expenseTotal || 1;
+  const incomeMultipliers = [0.68, 0.72, 0.78, 0.84, 0.76, 0.82, 0.79, 0.93, 0.88, 0.91, 0.95, 1.0];
+  const expenseMultipliers = [0.71, 0.65, 0.74, 0.68, 0.72, 0.76, 0.70, 0.78, 0.73, 0.69, 0.75, 0.62];
+  const labels = getLastNMonthLabels(selectedMonth, 12);
+  return {
+    income: labels.map((label, i) => ({ label, value: incomeBase * incomeMultipliers[i] })),
+    expense: labels.map((label, i) => ({ label, value: expenseBase * expenseMultipliers[i] }))
+  };
 }
 
 export function getAnalyticsSummary(
@@ -190,6 +206,7 @@ export function getAnalyticsSummary(
   const goals = deriveGoals(items, currency, rate, savingsTotal);
   const leaks = deriveLeaks(items, currency, rate);
   const monthlyIncome = deriveMonthlyIncome(incomeTotal, selectedMonth);
+  const overviewTrend = deriveOverviewTrend(incomeTotal, expenseTotal, selectedMonth);
   const sixMonthAverage = monthlyIncome.reduce((total, month) => total + month.value, 0) / monthlyIncome.length;
 
   return {
@@ -214,6 +231,7 @@ export function getAnalyticsSummary(
       usdIncome: currency === "USD" ? incomeTotal : incomeTotal / rate,
       tomanGrowthPct: 40,
       usdGrowthPct: 6
-    }
+    },
+    overviewTrend
   };
 }
