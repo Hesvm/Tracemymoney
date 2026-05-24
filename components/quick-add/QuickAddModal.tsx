@@ -9,6 +9,7 @@ import { formatPrimaryAmount } from "@/lib/formatters";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { Currency, GoalCategory, MoneyNodeType, RecurrenceType } from "@/types/money";
 import { AmountInput, CurrencySegmentedToggle, GoalCategoryChips, recurrenceOptions, StyledDatePicker, StyledDropdown } from "./FormControls";
+import { getHistoricalRate } from "@/lib/exchangeRates/getHistoricalRate";
 
 const labels: Record<MoneyNodeType, { title: string; submit: string; subject: string; amount: string }> = {
   income: { title: "Add Income", submit: "Add Income", subject: "Source", amount: "Amount" },
@@ -95,6 +96,12 @@ export function QuickAddModal({
   const [goalCategory, setGoalCategory] = useState<GoalCategory>("phone");
   const [titleValue, setTitleValue] = useState("");
   const [resetKey, setResetKey] = useState(0);
+  const liveRate = useMoneyMapStore((state) => state.exchangeRate.usdToToman);
+  const [resolvedRate, setResolvedRate] = useState<number | null>(null);
+  const [resolvedRateSource, setResolvedRateSource] = useState<"historical_cache" | "current_api" | "manual">("current_api");
+  const [resolvedRateHint, setResolvedRateHint] = useState<"exact" | "nearest_previous" | null>(null);
+  const [manualRate, setManualRate] = useState<string>("");
+  const [isRateManual, setIsRateManual] = useState(false);
   const copy = activeType ? labels[activeType] : labels.income;
 
   const parentOptions = useMemo(
@@ -111,6 +118,11 @@ export function QuickAddModal({
     setGoalCategory("phone");
     setTitleValue("");
     setResetKey((current) => current + 1);
+    setResolvedRate(null);
+    setResolvedRateHint(null);
+    setManualRate("");
+    setIsRateManual(false);
+    setResolvedRateSource("current_api");
   }
 
   useEffect(() => {
@@ -130,7 +142,42 @@ export function QuickAddModal({
     setGoalCategory(editItem.category ?? "phone");
     setTitleValue(editItem.title ?? "");
     setResetKey((current) => current + 1);
+    if (editItem.amount?.exchangeRateAtEntry) {
+      setManualRate(String(editItem.amount.exchangeRateAtEntry));
+      setResolvedRate(editItem.amount.exchangeRateAtEntry);
+      setResolvedRateSource(editItem.amount.rateSource ?? "current_api");
+      setIsRateManual(editItem.amount.rateSource === "manual");
+    }
   }, [defaultCurrency, editItem, open]);
+
+  useEffect(() => {
+    if (currency !== "USD" || activeType === "bucket" || activeType === "goal") {
+      setResolvedRate(null);
+      setResolvedRateHint(null);
+      setManualRate("");
+      setIsRateManual(false);
+      return;
+    }
+
+    let cancelled = false;
+    getHistoricalRate(date).then((result) => {
+      if (cancelled) return;
+      if (result) {
+        setResolvedRate(result.rate);
+        setResolvedRateSource(result.source);
+        setResolvedRateHint(result.hint);
+        setManualRate(String(result.rate));
+      } else {
+        setResolvedRate(liveRate);
+        setResolvedRateSource("current_api");
+        setResolvedRateHint(null);
+        setManualRate(liveRate ? String(liveRate) : "");
+      }
+      setIsRateManual(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [date, currency, activeType, liveRate]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -142,6 +189,12 @@ export function QuickAddModal({
       saveAmountSuggestion(title, amount);
     }
 
+    const parsedManualRate = parseFloat(manualRate.replace(/,/g, ""));
+    const effectiveRate = isRateManual && Number.isFinite(parsedManualRate) && parsedManualRate > 0
+      ? parsedManualRate
+      : resolvedRate ?? undefined;
+    const effectiveRateSource = isRateManual ? "manual" : resolvedRateSource;
+
     const payload = {
       type: activeType,
       title,
@@ -152,7 +205,9 @@ export function QuickAddModal({
       note: String(form.get("note") ?? ""),
       recurrence: activeType === "goal" ? "none" : recurrence,
       parentNodeId: parentNodeId || undefined,
-      category: activeType === "goal" ? goalCategory : undefined
+      category: activeType === "goal" ? goalCategory : undefined,
+      rateOverride: effectiveRate,
+      rateSource: effectiveRateSource,
     };
 
     if (editItemId) {
@@ -241,6 +296,33 @@ export function QuickAddModal({
                 {activeType === "bucket" && (
                   <Field label="Parent">
                     <StyledDropdown value={parentNodeId} options={parentOptions} onChange={setParentNodeId} label="Parent" />
+                  </Field>
+                )}
+
+                {activeType !== "bucket" && activeType !== "goal" && currency === "USD" && (
+                  <Field label="USD rate for this date">
+                    <div className="grid gap-1.5">
+                      <input
+                        className={inputClass}
+                        type="text"
+                        inputMode="numeric"
+                        value={manualRate}
+                        onChange={(e) => {
+                          setManualRate(e.target.value);
+                          setIsRateManual(true);
+                        }}
+                        placeholder="e.g. 82000"
+                      />
+                      <span className="px-1 text-[12px] text-[#b1b1b8]">
+                        {isRateManual
+                          ? "Using your custom rate"
+                          : resolvedRateHint === "exact"
+                          ? "Historical rate loaded"
+                          : resolvedRateHint === "nearest_previous"
+                          ? "No exact rate found. Using nearest available rate."
+                          : "No historical rate found. Using latest available rate."}
+                      </span>
+                    </div>
                   </Field>
                 )}
 
