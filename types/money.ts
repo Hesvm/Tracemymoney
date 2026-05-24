@@ -17,12 +17,15 @@ export interface AppSettings {
 
 export type GoalCategory = "car" | "phone" | "trip" | "gift" | "house" | "boat" | "gaming-console" | "watch" | "laptop" | "other";
 
+export type RateSource = "historical_cache" | "current_api" | "manual";
+
 export interface MoneyAmount {
   amount: number;
   currency: Currency;
   convertedAmountAtEntry?: number;
   convertedCurrency?: Currency;
   exchangeRateAtEntry?: number;
+  rateSource?: RateSource;
 }
 
 export interface MoneyItem {
