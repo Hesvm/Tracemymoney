@@ -7,6 +7,7 @@ import { GoalsProgressCard } from "@/components/analytics/GoalsProgressCard";
 import { IncomeRhythmCard } from "@/components/analytics/IncomeRhythmCard";
 import { MoneyFlowReplay } from "@/components/analytics/MoneyFlowReplay";
 import { MoneyLeaksCard } from "@/components/analytics/MoneyLeaksCard";
+import { OverviewCard } from "@/components/analytics/OverviewCard";
 import { RealValueCard } from "@/components/analytics/RealValueCard";
 import { getAnalyticsSummary, type AnalyticsCurrency } from "@/lib/analytics";
 import { isItemInMonth } from "@/lib/months";
@@ -88,6 +89,7 @@ export function AnalyticsModal({ open, onClose }: { open: boolean; onClose: () =
               ) : (
                 <div className="grid grid-cols-1 gap-4 pb-2 lg:grid-cols-2">
                   <MoneyFlowReplay summary={summary} />
+                  <OverviewCard summary={summary} calendarSystem={calendarSystem} selectedMonth={selectedMonth} />
                   <RealValueCard summary={summary} />
                   <GoalsProgressCard summary={summary} />
                   <MoneyLeaksCard summary={summary} />
