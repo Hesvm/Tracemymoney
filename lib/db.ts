@@ -7,13 +7,25 @@ interface LocalRecord {
   updatedAt: string;
 }
 
+export interface CachedExchangeRate {
+  date: string;        // YYYY-MM-DD — primary key
+  usdToToman: number;
+  source: "navasan" | "manual";
+  createdAt: string;
+}
+
 class MoneyMapDB extends Dexie {
   documents!: Table<LocalRecord, string>;
+  exchangeRates!: Table<CachedExchangeRate, string>;
 
   constructor() {
     super("money-map-db");
     this.version(1).stores({
       documents: "id",
+    });
+    this.version(2).stores({
+      documents: "id",
+      exchangeRates: "date",
     });
   }
 }
