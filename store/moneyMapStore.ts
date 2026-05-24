@@ -10,6 +10,7 @@ import { initialEdges, initialItems, initialNodes } from "@/lib/initialData";
 import { normalizeMonth, shiftMonth } from "@/lib/months";
 import { resetUserCreatedData } from "@/lib/settingsData";
 import { loadLocalDocument } from "@/lib/db";
+import { saveDailyRate } from "@/lib/exchangeRates/saveDailyRate";
 import { applyDocument } from "@/lib/document";
 import type {
   AppSettings,
@@ -35,6 +36,8 @@ type AddPayload = {
   parentNodeId?: string;
   targetAmount?: number;
   category?: GoalCategory;
+  rateOverride?: number;
+  rateSource?: import("@/types/money").RateSource;
 };
 
 export type ContextMenuTarget =
@@ -167,16 +170,18 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
 
       const currency = payload.currency ?? get().settings.defaultCurrency;
       const isHistorical = payload.type === "income" || payload.type === "expense";
+      const effectiveRate = payload.rateOverride ?? get().exchangeRate.usdToToman;
+      const effectiveRateSource = payload.rateSource ?? "current_api";
       const moneyAmount =
         payload.amount !== undefined
           ? isHistorical
-            ? createLockedAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+            ? createLockedAmount(payload.amount, currency, effectiveRate, effectiveRateSource)
             : createLiveAmount(payload.amount, currency)
           : undefined;
       const targetAmount =
         payload.targetAmount !== undefined
           ? isHistorical
-            ? createLockedAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+            ? createLockedAmount(payload.targetAmount, currency, effectiveRate, effectiveRateSource)
             : createLiveAmount(payload.targetAmount, currency)
           : undefined;
       const item: MoneyItem = {
@@ -243,16 +248,18 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
     updateItemFromForm: (itemId, payload) => {
       const currency = payload.currency ?? get().settings.defaultCurrency;
       const isHistorical = payload.type === "income" || payload.type === "expense";
+      const effectiveRate = payload.rateOverride ?? get().exchangeRate.usdToToman;
+      const effectiveRateSource = payload.rateSource ?? "current_api";
       const moneyAmount =
         payload.amount !== undefined
           ? isHistorical
-            ? createLockedAmount(payload.amount, currency, get().exchangeRate.usdToToman)
+            ? createLockedAmount(payload.amount, currency, effectiveRate, effectiveRateSource)
             : createLiveAmount(payload.amount, currency)
           : undefined;
       const targetAmount =
         payload.targetAmount !== undefined
           ? isHistorical
-            ? createLockedAmount(payload.targetAmount, currency, get().exchangeRate.usdToToman)
+            ? createLockedAmount(payload.targetAmount, currency, effectiveRate, effectiveRateSource)
             : createLiveAmount(payload.targetAmount, currency)
           : undefined;
 
@@ -500,6 +507,7 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
             items,
           };
         });
+        saveDailyRate(usdToToman).catch(() => {/* non-critical */});
       } catch (error) {
         set((state) => ({
           exchangeRate: {
