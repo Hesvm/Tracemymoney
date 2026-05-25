@@ -29,7 +29,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClass =
-  "h-12 rounded-full bg-[#fbfaf7] px-4 text-[15px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
+  "h-12 rounded-full bg-[#fbfaf7] px-4 text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
 
 function submitButtonClass(type: MoneyNodeType) {
   if (type === "income") {
@@ -225,7 +225,7 @@ export function QuickAddModal({
     <AnimatePresence>
       {open && activeType && (
         <motion.div
-          className="fixed inset-0 z-40 grid place-items-center bg-[#2f333b]/14 px-5 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-[#2f333b]/14 sm:px-5 backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -234,8 +234,8 @@ export function QuickAddModal({
           }}
         >
           <motion.form
-            className="flex w-full max-w-[430px] flex-col rounded-[32px] bg-white shadow-soft"
-            style={{ maxHeight: "min(90dvh, 680px)" }}
+            className="flex w-full max-w-full sm:max-w-[430px] flex-col rounded-t-[32px] sm:rounded-[32px] bg-white shadow-soft"
+            style={{ maxHeight: "85dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
@@ -361,7 +361,7 @@ export function QuickAddModal({
             <div className="shrink-0 px-6 pt-3 pb-6">
               <button
                 type="submit"
-                className={`h-13 w-full rounded-full px-5 py-3.5 text-[15px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
+                className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
               >
                 {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
               </button>

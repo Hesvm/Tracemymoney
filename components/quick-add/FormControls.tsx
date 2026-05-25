@@ -21,7 +21,7 @@ type DropdownOption<T extends string> = {
 };
 
 const triggerClass =
-  "flex h-12 w-full items-center justify-between rounded-full bg-[#fbfaf7] px-4 text-left text-[15px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition hover:bg-white focus-visible:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
+  "flex h-12 w-full items-center justify-between rounded-full bg-[#fbfaf7] px-4 text-left text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition hover:bg-white focus-visible:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
 
 export const recurrenceOptions: Array<DropdownOption<RecurrenceType>> = [
   { value: "none", label: "Does not repeat" },
@@ -154,7 +154,7 @@ export function AmountInput({
   return (
     <input
       ref={inputRef}
-      className="h-12 rounded-full bg-[#fbfaf7] px-4 text-[15px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]"
+      className="h-12 rounded-full bg-[#fbfaf7] px-4 text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]"
       inputMode={currency === "USD" ? "decimal" : "numeric"}
       name="amountDisplay"
       placeholder="60,000,000"
