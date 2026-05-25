@@ -59,6 +59,7 @@ html,
 body {
   min-height: 100%;
   overscroll-behavior: none;
+  overflow-x: hidden;
 }
 
 body {
