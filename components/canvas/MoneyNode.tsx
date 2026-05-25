@@ -174,8 +174,8 @@ const positionKey: Record<Position, string> = {
 };
 
 const handleStyle = {
-  width: 10,
-  height: 10,
+  width: 14,
+  height: 14,
   borderRadius: "999px",
   background: "#fffaf2",
   border: "1px solid rgba(60, 55, 45, 0.18)",
@@ -205,7 +205,7 @@ function NodeHandle({ position }: { position: Position }) {
 }
 
 export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
-  const { data, id } = props;
+  const { data, id, selected } = props;
   const [isHovering, setIsHovering] = useState(false);
   const items = useMoneyMapStore((state) => state.items);
   const calendarSystem = useMoneyMapStore((state) => state.calendarSystem);
@@ -223,17 +223,18 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
 
   return (
     <article
-      className={`money-node group w-[430px] rounded-[28px] bg-white/95 px-5 pb-6 pt-5 shadow-soft backdrop-blur transition ${
+      className={`money-node group w-[280px] md:w-[430px] rounded-[28px] bg-white/95 px-4 pb-5 pt-4 md:px-5 md:pb-6 md:pt-5 shadow-soft backdrop-blur transition ${
         isFocused ? "ring-4 ring-[#d8cdb9]/70" : ""
-      }`}
+      } ${selected ? "money-node-selected" : ""}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       style={{
-        "--handle-opacity": isHovering ? 1 : 0
+        "--handle-opacity": isHovering || selected ? 1 : 0
       } as React.CSSProperties}
     >
       <style>{`
-        .money-node:hover .node-handle {
+        .money-node:hover .node-handle,
+        .money-node-selected .node-handle {
           opacity: 1;
         }
       `}</style>
