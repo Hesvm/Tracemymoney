@@ -45,7 +45,11 @@ export function BottomNav({
   const [monthName, year] = formatMonthLabel(selectedMonth, calendarSystem).split(" ");
 
   return (
-    <nav className="fixed bottom-9 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2" aria-label="Money map controls">
+    <nav
+      className="fixed left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 sm:gap-2"
+      style={{ bottom: "max(28px, calc(8px + env(safe-area-inset-bottom, 0px)))" }}
+      aria-label="Money map controls"
+    >
       <DockButton label="Add item" onClick={onAddClick} ref={addButtonRef}>
         <Plus className="size-6" strokeWidth={1.9} />
       </DockButton>
@@ -53,7 +57,7 @@ export function BottomNav({
         <button className="grid size-6 place-items-center text-[#a0a3ae] transition hover:text-[#626677]" aria-label="Previous month" type="button" onClick={() => shiftSelectedMonth(-1)}>
           <ChevronLeft className="size-[18px]" strokeWidth={2.4} />
         </button>
-        <div className="min-w-[86px] text-center text-[18px] leading-none">
+        <div className="min-w-[64px] sm:min-w-[86px] text-center text-[15px] sm:text-[18px] leading-none">
           <span className="font-semibold">{monthName}</span>{" "}
           <span className="font-light text-[#a0a3ae]">{year}</span>
         </div>
