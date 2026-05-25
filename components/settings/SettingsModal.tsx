@@ -55,7 +55,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-[#2f333b]/14 px-4 py-10 backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2f333b]/14 sm:px-4 sm:py-10 backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -68,7 +68,8 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             role="dialog"
             aria-modal="true"
             aria-labelledby="settings-title"
-            className="flex max-h-[calc(100vh-80px)] w-[420px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[34px] bg-[#fbfaf7] shadow-[0_30px_80px_rgba(76,74,68,0.2),0_1px_0_rgba(255,255,255,0.85)_inset]"
+            className="flex max-h-[85dvh] sm:max-h-[calc(100vh-80px)] w-full sm:w-[420px] sm:max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-t-[34px] sm:rounded-[34px] bg-[#fbfaf7] shadow-[0_30px_80px_rgba(76,74,68,0.2),0_1px_0_rgba(255,255,255,0.85)_inset]"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             initial={{ opacity: 0, scale: shouldAnimate ? 0.96 : 1, y: shouldAnimate ? 14 : 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: shouldAnimate ? 0.98 : 1, y: shouldAnimate ? 10 : 0 }}

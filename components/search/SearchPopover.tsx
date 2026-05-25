@@ -57,7 +57,7 @@ export function SearchPopover({ open, onClose }: { open: boolean; onClose: () =>
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-[#2f333b]/12 px-4 py-10"
+          className="fixed inset-0 z-50 flex items-end sm:items-start sm:justify-center bg-[#2f333b]/12 sm:px-4 sm:py-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -69,7 +69,8 @@ export function SearchPopover({ open, onClose }: { open: boolean; onClose: () =>
             role="dialog"
             aria-modal="true"
             aria-labelledby="search-title"
-            className="w-[420px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[30px] bg-white p-4 shadow-[0_30px_80px_rgba(76,74,68,0.2),0_1px_0_rgba(255,255,255,0.85)_inset]"
+            className="w-full sm:w-[420px] sm:max-w-[calc(100vw-32px)] overflow-hidden rounded-t-[30px] sm:rounded-[30px] bg-white p-4 shadow-[0_30px_80px_rgba(76,74,68,0.2),0_1px_0_rgba(255,255,255,0.85)_inset]"
+            style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 0px))" }}
             initial={{ opacity: 0, scale: 0.96, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 10 }}
@@ -94,7 +95,7 @@ export function SearchPopover({ open, onClose }: { open: boolean; onClose: () =>
               <Search className="size-4 text-[#9a958d]" strokeWidth={2.2} />
               <input
                 ref={inputRef}
-                className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-[#30333b] outline-none placeholder:text-[#aaa59c]"
+                className="min-w-0 flex-1 bg-transparent text-[16px] font-medium text-[#30333b] outline-none placeholder:text-[#aaa59c]"
                 placeholder="Search money map..."
                 value={query}
                 onChange={(event) => {
