@@ -46,14 +46,14 @@ export function BottomNav({
 
   return (
     <nav
-      className="fixed left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 sm:gap-2"
+      className="fixed left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 sm:gap-2 max-w-[calc(100vw-16px)]"
       style={{ bottom: "max(28px, calc(8px + env(safe-area-inset-bottom, 0px)))" }}
       aria-label="Money map controls"
     >
       <DockButton label="Add item" onClick={onAddClick} ref={addButtonRef}>
         <Plus className="size-6" strokeWidth={1.9} />
       </DockButton>
-      <div className="flex h-11 items-center gap-1 rounded-full bg-white px-2 text-[#30333b] shadow-dock">
+      <div className="flex h-11 items-center gap-1 rounded-full bg-white px-2 text-[#30333b] shadow-dock max-w-[220px] overflow-hidden">
         <button className="grid size-6 place-items-center text-[#a0a3ae] transition hover:text-[#626677]" aria-label="Previous month" type="button" onClick={() => shiftSelectedMonth(-1)}>
           <ChevronLeft className="size-[18px]" strokeWidth={2.4} />
         </button>
