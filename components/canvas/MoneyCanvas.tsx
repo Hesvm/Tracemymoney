@@ -15,6 +15,7 @@ import { MoneyEdge } from "@/components/canvas/MoneyEdge";
 import { MoneyNode } from "@/components/canvas/MoneyNode";
 import { decorateEdge } from "@/lib/edges";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
+import { useMobile } from "@/hooks/useMobile";
 
 const nodeTypes = {
   moneyNode: MoneyNode
@@ -58,6 +59,8 @@ function CanvasInner() {
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
   const rfStore = useStoreApi();
   const reactFlow = useReactFlow();
+  const isMobile = useMobile();
+  const didFitMobile = useRef(false);
 
   const defaultViewport = useMemo(() => ({ x: 260, y: 145, zoom: 0.88 }), []);
   const reconnectSuccessful = useRef(false);
@@ -177,6 +180,16 @@ function CanvasInner() {
   }));
 
   useEffect(() => {
+    if (isMobile && !didFitMobile.current) {
+      didFitMobile.current = true;
+      const timer = setTimeout(() => {
+        reactFlow.fitView({ padding: 0.12, duration: 0 });
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, reactFlow]);
+
+  useEffect(() => {
     if (!focusedNodeId) return;
     const node = nodes.find((candidate) => candidate.id === focusedNodeId);
     if (!node) return;
@@ -209,17 +222,17 @@ function CanvasInner() {
       onNodeContextMenu={handleNodeContextMenu}
       onPaneContextMenu={handlePaneContextMenu}
       defaultViewport={defaultViewport}
-      minZoom={0.15}
-      maxZoom={3.5}
+      minZoom={isMobile ? 0.25 : 0.15}
+      maxZoom={isMobile ? 2.5 : 3.5}
       panOnDrag
       zoomOnPinch
-      zoomOnScroll
+      zoomOnScroll={!isMobile}
       nodesDraggable
       proOptions={{ hideAttribution: true }}
       fitView={false}
       onInit={() => {
         const { setMinZoom } = rfStore.getState();
-        setMinZoom(0.15);
+        setMinZoom(isMobile ? 0.25 : 0.15);
       }}
     >
       {showCanvasDots && <CanvasDots />}
