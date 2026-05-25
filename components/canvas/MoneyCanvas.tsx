@@ -184,11 +184,11 @@ function CanvasInner() {
       didFitMobile.current = true;
       const timer = setTimeout(() => {
         reactFlow.fitView({ padding: 0.04, duration: 0 });
-        // Nudge up: bottom nav (~90px) is taller than top bar (~52px),
-        // so the visual center sits ~20px above the mathematical center.
+        // Shift content up: decreasing vp.y moves canvas up so nodes appear higher.
+        // Bottom nav (~90px) > top bar (~52px) → visual center is above math center.
         window.requestAnimationFrame(() => {
           const vp = reactFlow.getViewport();
-          reactFlow.setViewport({ ...vp, y: vp.y + 20 }, { duration: 0 });
+          reactFlow.setViewport({ ...vp, y: vp.y - 30 }, { duration: 0 });
         });
       }, 120);
       return () => clearTimeout(timer);
