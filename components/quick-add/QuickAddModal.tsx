@@ -235,7 +235,7 @@ export function QuickAddModal({
         >
           <motion.form
             className="flex w-full max-w-full sm:max-w-[430px] flex-col rounded-t-[32px] sm:rounded-[32px] bg-white shadow-soft"
-            style={{ maxHeight: "85dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            style={{ maxHeight: "88dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
@@ -243,8 +243,8 @@ export function QuickAddModal({
             onSubmit={submit}
           >
             {/* pinned header */}
-            <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-4">
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#2f333b]">
+            <div className="shrink-0 flex items-center justify-between px-4 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.04em] text-[#2f333b]">
                 {editItemId ? copy.title.replace("Add", "Edit") : copy.title}
               </h2>
               <button
@@ -258,7 +258,7 @@ export function QuickAddModal({
             </div>
 
             {/* scrollable fields */}
-            <div className="flex-1 overflow-y-auto px-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6">
               <div className="grid gap-4 pb-2">
                 <Field label={copy.subject}>
                   <input
@@ -274,7 +274,7 @@ export function QuickAddModal({
 
                 {activeType !== "bucket" && (
                   <>
-                    <div className="grid grid-cols-[1fr_176px] gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_176px] gap-3">
                       <Field label={copy.amount}>
                         <AmountInput currency={currency} value={amount} onValueChange={setAmount} resetKey={resetKey} />
                       </Field>
@@ -358,7 +358,7 @@ export function QuickAddModal({
             </div>
 
             {/* pinned submit */}
-            <div className="shrink-0 px-6 pt-3 pb-6">
+            <div className="shrink-0 px-4 pt-2 pb-4 sm:px-6 sm:pt-3 sm:pb-6">
               <button
                 type="submit"
                 className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
