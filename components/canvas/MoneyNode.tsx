@@ -32,15 +32,15 @@ function NodeBadge({ type, title }: { type: MoneyNodeType; title: string }) {
   const Icon = nodeStyles[type].icon;
 
   return (
-    <div className={`inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[14px] ${nodeStyles[type].pill}`}>
+    <div className={`inline-flex h-6 md:h-8 items-center gap-1 md:gap-1.5 rounded-full px-2 md:px-2.5 text-[11px] md:text-[14px] ${nodeStyles[type].pill}`}>
       {type === "savings" && (
-        <span className="grid size-5 place-items-center overflow-hidden rounded-full bg-white/70">
-          <Image src="/icons/savings-piggy.webp" alt="" width={20} height={20} className="size-5 object-cover" aria-hidden="true" />
+        <span className="grid size-4 md:size-5 place-items-center overflow-hidden rounded-full bg-white/70">
+          <Image src="/icons/savings-piggy.webp" alt="" width={20} height={20} className="size-4 md:size-5 object-cover" aria-hidden="true" />
         </span>
       )}
       {type !== "bucket" && type !== "savings" && (
-        <span className={`grid size-5 place-items-center rounded-full ${nodeStyles[type].iconBg}`}>
-          <Icon className="size-3.5 text-white" strokeWidth={2.4} />
+        <span className={`grid size-4 md:size-5 place-items-center rounded-full ${nodeStyles[type].iconBg}`}>
+          <Icon className="size-3 md:size-3.5 text-white" strokeWidth={2.4} />
         </span>
       )}
       <span className="font-serif italic leading-none">{title}</span>
@@ -68,7 +68,7 @@ function MoneyRow({
 
   return (
     <motion.li
-      className="nodrag grid grid-cols-[1fr_auto] gap-7 rounded-[14px] px-2 py-1.5 -mx-2 transition hover:bg-[#fbfaf7]"
+      className="nodrag grid grid-cols-[1fr_auto] gap-3 md:gap-7 rounded-[10px] md:rounded-[14px] px-1.5 py-1 -mx-1.5 md:px-2 md:py-1.5 md:-mx-2 transition hover:bg-[#fbfaf7]"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
@@ -81,14 +81,14 @@ function MoneyRow({
       }}
     >
       <div className="min-w-0">
-        <div className="truncate text-[17px] font-semibold leading-[1.15] tracking-[-0.01em] text-[#2f333b]">
+        <div className="truncate text-[13px] md:text-[17px] font-semibold leading-[1.15] tracking-[-0.01em] text-[#2f333b]">
           {primary}
           {title}
         </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={rateTick}
-            className="mt-1 text-[13px] italic leading-none text-[#868b9b]"
+            className="mt-1 text-[11px] md:text-[13px] italic leading-none text-[#868b9b]"
             initial={{ opacity: 0.4 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -97,7 +97,7 @@ function MoneyRow({
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className="pt-1 text-right text-[11px] leading-none text-[#868b9b]">
+      <div className="pt-1 text-right text-[10px] md:text-[11px] leading-none text-[#868b9b]">
         {isRecurring ? (
           <>
             <div>{formatShortDate(item.date, calendarSystem)}</div>
@@ -223,7 +223,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
 
   return (
     <article
-      className={`money-node group w-[280px] md:w-[430px] rounded-[28px] bg-white/95 px-4 pb-5 pt-4 md:px-5 md:pb-6 md:pt-5 shadow-soft backdrop-blur transition ${
+      className={`money-node group w-[200px] md:w-[430px] rounded-[20px] md:rounded-[28px] bg-white/95 px-3 pb-4 pt-3 md:px-5 md:pb-6 md:pt-5 shadow-soft backdrop-blur transition ${
         isFocused ? "ring-4 ring-[#d8cdb9]/70" : ""
       } ${selected ? "money-node-selected" : ""}`}
       onMouseEnter={() => setIsHovering(true)}
@@ -243,19 +243,19 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       <NodeHandle position={Position.Bottom} />
       <NodeHandle position={Position.Left} />
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-3 md:mb-6 flex items-center justify-between">
         <NodeBadge type={data.type} title={data.title} />
         <button
-          className="nodrag grid size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
+          className="nodrag grid size-7 md:size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
           aria-label={`Add to ${data.title}`}
           onClick={() => setPendingAddNode(id)}
         >
-          <Plus className="size-5" strokeWidth={2.2} />
+          <Plus className="size-4 md:size-5" strokeWidth={2.2} />
         </button>
       </div>
       <ul className="space-y-2">
         {data.collapsed ? (
-          <li className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]">
+          <li className="rounded-[14px] md:rounded-[18px] bg-[#fbfaf7] px-3 py-2 md:px-4 md:py-3 text-[12px] md:text-[14px] font-medium text-[#9a958d]">
             {nodeItems.length} item{nodeItems.length === 1 ? "" : "s"} hidden
           </li>
         ) : (
@@ -284,7 +284,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="rounded-[18px] bg-[#fbfaf7] px-4 py-3 text-[14px] font-medium text-[#9a958d]"
+                className="rounded-[14px] md:rounded-[18px] bg-[#fbfaf7] px-3 py-2 md:px-4 md:py-3 text-[12px] md:text-[14px] font-medium text-[#9a958d]"
               >
                 No items this month
               </motion.li>
