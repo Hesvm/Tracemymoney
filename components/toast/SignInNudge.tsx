@@ -38,7 +38,8 @@ export function SignInNudge() {
       <AnimatePresence>
         {visible && (
           <motion.div
-            className="fixed bottom-28 left-1/2 z-30 -translate-x-1/2 pointer-events-auto max-w-[calc(100dvw-2rem)]"
+            className="fixed inset-x-0 mx-auto z-30 w-fit pointer-events-auto max-w-[calc(100dvw-2rem)]"
+            style={{ bottom: "max(96px, calc(64px + env(safe-area-inset-bottom, 0px)))" }}
             initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
