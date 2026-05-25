@@ -183,7 +183,13 @@ function CanvasInner() {
     if (isMobile && !didFitMobile.current) {
       didFitMobile.current = true;
       const timer = setTimeout(() => {
-        reactFlow.fitView({ padding: 0.12, duration: 0 });
+        reactFlow.fitView({ padding: 0.04, duration: 0 });
+        // Nudge up: bottom nav (~90px) is taller than top bar (~52px),
+        // so the visual center sits ~20px above the mathematical center.
+        window.requestAnimationFrame(() => {
+          const vp = reactFlow.getViewport();
+          reactFlow.setViewport({ ...vp, y: vp.y + 20 }, { duration: 0 });
+        });
       }, 120);
       return () => clearTimeout(timer);
     }
@@ -194,7 +200,7 @@ function CanvasInner() {
     const node = nodes.find((candidate) => candidate.id === focusedNodeId);
     if (!node) return;
 
-    void reactFlow.setCenter(node.position.x + 165, node.position.y + 120, {
+    void reactFlow.setCenter(node.position.x + 130, node.position.y + 100, {
       zoom: 1.05,
       duration: 420
     });
