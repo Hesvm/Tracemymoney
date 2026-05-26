@@ -18,7 +18,7 @@ export function formatConvertedAmount(amount?: MoneyAmount, liveRate?: number | 
       maximumFractionDigits: amount.convertedCurrency === "USD" ? 2 : 0
     }).format(amount.convertedAmountAtEntry);
     const value = amount.convertedCurrency === "USD" ? `$${formatted}` : `${formatted} T`;
-    return `~ ${value} · entry rate`;
+    return `~ ${value}`;
   }
 
   if (liveRate && liveRate > 0) {

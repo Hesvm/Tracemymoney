@@ -55,7 +55,7 @@ export function formatShortDate(isoDate: string | undefined, calendarSystem: Cal
   if (!isoDate) return "";
   const parts = isoToCalendarParts(isoDate, calendarSystem);
   if (calendarSystem === "shamsi") {
-    return `${parts.day} ${shamsiMonthAbbr[parts.month - 1]}`;
+    return `${shamsiMonthAbbr[parts.month - 1]} ${parts.day}`;
   }
   const parsed = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return "";

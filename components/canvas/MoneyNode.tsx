@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Image from "next/image";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { formatConvertedAmount, formatDateLabel, formatPrimaryAmount } from "@/lib/formatters";
+import { formatConvertedAmount, formatPrimaryAmount } from "@/lib/formatters";
 import { formatShortDate, isItemInMonth } from "@/lib/months";
 import { getGoalImage } from "@/lib/analytics";
 import { useAnimatedRate } from "@/hooks/useAnimatedRate";
@@ -104,7 +104,7 @@ function MoneyRow({
             <div className="mt-0.5 italic opacity-70">↻ {recurrenceLabel[item.recurrence!]}</div>
           </>
         ) : (
-          formatDateLabel(item.date, calendarSystem)
+          formatShortDate(item.date, calendarSystem)
         )}
       </div>
     </motion.li>
