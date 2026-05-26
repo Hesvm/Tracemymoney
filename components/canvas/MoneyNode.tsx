@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, Goal, PiggyBank, Plus } from "lucide-react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatConvertedAmount, formatPrimaryAmount } from "@/lib/formatters";
 import { formatShortDate, isItemInMonth } from "@/lib/months";
@@ -11,6 +11,8 @@ import { getGoalImage } from "@/lib/analytics";
 import { useAnimatedRate } from "@/hooks/useAnimatedRate";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import { EmptyNodeAction } from "@/components/canvas/EmptyNodeAction";
+import { NodeTotalChip } from "@/components/canvas/NodeTotalChip";
+import { getNodeMonthlyTotal } from "@/lib/nodeTotals";
 import type { MoneyFlowNode, MoneyItem, MoneyNodeType } from "@/types/money";
 
 const nodeStyles: Record<MoneyNodeType, { pill: string; iconBg: string; icon: React.ElementType }> = {
@@ -213,6 +215,19 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
   const focusedNodeId = useMoneyMapStore((state) => state.focusedNodeId);
   const setPendingAddNode = useMoneyMapStore((state) => state.setPendingAddNode);
   const liveRate = useMoneyMapStore((state) => state.exchangeRate.usdToToman);
+  const defaultCurrency = useMoneyMapStore((state) => state.settings.defaultCurrency);
+  const usdToToman = useMoneyMapStore((state) => state.exchangeRate.usdToToman);
+  const secondaryCurrency = defaultCurrency === "TOMAN" ? "USD" : "TOMAN" as const;
+
+  const primaryTotal = useMemo(
+    () => getNodeMonthlyTotal(data.itemIds, items, selectedMonth, defaultCurrency, usdToToman),
+    [data.itemIds, items, selectedMonth, defaultCurrency, usdToToman]
+  );
+  const secondaryTotal = useMemo(
+    () => getNodeMonthlyTotal(data.itemIds, items, selectedMonth, secondaryCurrency, usdToToman),
+    [data.itemIds, items, selectedMonth, secondaryCurrency, usdToToman]
+  );
+
   const { displayed: animatedRate, ticked: rateTick } = useAnimatedRate(liveRate);
 
   const nodeItems = data.itemIds
@@ -243,15 +258,24 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       <NodeHandle position={Position.Bottom} />
       <NodeHandle position={Position.Left} />
 
-      <div className="mb-3 md:mb-6 flex items-center justify-between">
+      <div className="mb-3 md:mb-6 flex items-center justify-between gap-2">
         <NodeBadge type={data.type} title={data.title} />
-        <button
-          className="nodrag grid size-7 md:size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
-          aria-label={`Add to ${data.title}`}
-          onClick={() => setPendingAddNode(id)}
-        >
-          <Plus className="size-4 md:size-5" strokeWidth={2.2} />
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <NodeTotalChip
+            total={primaryTotal}
+            currency={defaultCurrency}
+            nodeType={data.type}
+            secondaryTotal={secondaryTotal}
+            secondaryCurrency={secondaryCurrency}
+          />
+          <button
+            className="nodrag grid size-7 md:size-8 place-items-center rounded-full bg-[#f7f6f3] text-[#9a9da9] transition hover:bg-[#efeee9] active:scale-95"
+            aria-label={`Add to ${data.title}`}
+            onClick={() => setPendingAddNode(id)}
+          >
+            <Plus className="size-4 md:size-5" strokeWidth={2.2} />
+          </button>
+        </div>
       </div>
       <ul className="space-y-2">
         {data.collapsed ? (
