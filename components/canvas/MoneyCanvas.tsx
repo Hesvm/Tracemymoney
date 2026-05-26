@@ -183,9 +183,11 @@ function CanvasInner() {
     if (isMobile && !didFitMobile.current) {
       didFitMobile.current = true;
       const timer = setTimeout(() => {
-        // Center the Income node on screen at a comfortable zoom level.
+        // Read nodes directly from Zustand at fire-time to avoid stale-closure
+        // issues and dep-array race conditions that cancel this timer early.
+        const currentNodes = useMoneyMapStore.getState().nodes;
         const targetZoom = 0.85;
-        const incomeNode = nodes.find((n) => n.id === "node-income");
+        const incomeNode = currentNodes.find((n) => n.id === "node-income");
         if (incomeNode) {
           // Mobile node width = 200px, so center x offset = 100.
           // Nudge y up by 30px to compensate for larger bottom nav vs top bar.
@@ -217,7 +219,7 @@ function CanvasInner() {
       }, 120);
       return () => clearTimeout(timer);
     }
-  }, [isMobile, nodes, reactFlow]);
+  }, [isMobile, reactFlow]);
 
   useEffect(() => {
     if (!focusedNodeId) return;
