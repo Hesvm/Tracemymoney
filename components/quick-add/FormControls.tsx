@@ -157,7 +157,7 @@ export function AmountInput({
       className="h-12 rounded-full bg-[#fbfaf7] px-4 text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]"
       inputMode={currency === "USD" ? "decimal" : "numeric"}
       name="amountDisplay"
-      placeholder="60,000,000"
+      placeholder="20,000,000"
       value={display}
       onChange={(event) => {
         const nextRaw = event.target.value;
