@@ -183,30 +183,41 @@ function CanvasInner() {
     if (isMobile && !didFitMobile.current) {
       didFitMobile.current = true;
       const timer = setTimeout(() => {
-        // Fit all nodes to find the natural center, then boost zoom to 0.65
-        // so nodes are larger and more readable on mobile.
-        reactFlow.fitView({ padding: 0.04, duration: 0 });
-        window.requestAnimationFrame(() => {
-          const { x, y, zoom } = reactFlow.getViewport();
+        // Center the Income node on screen at a comfortable zoom level.
+        const targetZoom = 0.85;
+        const incomeNode = nodes.find((n) => n.id === "node-income");
+        if (incomeNode) {
+          // Mobile node width = 200px, so center x offset = 100.
+          // Nudge y up by 30px to compensate for larger bottom nav vs top bar.
+          const nodeCx = incomeNode.position.x + 100;
+          const nodeCy = incomeNode.position.y + 100;
           const vpW = window.innerWidth;
           const vpH = window.innerHeight;
-          const targetZoom = 0.65;
-          // Canvas center chosen by fitView
-          const cx = (vpW / 2 - x) / zoom;
-          const cy = (vpH / 2 - y) / zoom;
-          // Keep Y center; clamp X so leftmost node (canvas x≈40) stays visible
-          const rawX = vpW / 2 - cx * targetZoom;
-          const minX = 10 - 40 * targetZoom; // keep Income ≥ 10px from left edge
           reactFlow.setViewport({
-            x: Math.max(rawX, minX),
-            y: vpH / 2 - cy * targetZoom - 30,
+            x: vpW / 2 - nodeCx * targetZoom,
+            y: vpH / 2 - nodeCy * targetZoom - 30,
             zoom: targetZoom,
           }, { duration: 0 });
-        });
+        } else {
+          // Fallback: fitView then boost zoom
+          reactFlow.fitView({ padding: 0.04, duration: 0 });
+          window.requestAnimationFrame(() => {
+            const { x, y, zoom } = reactFlow.getViewport();
+            const vpW = window.innerWidth;
+            const vpH = window.innerHeight;
+            const cx = (vpW / 2 - x) / zoom;
+            const cy = (vpH / 2 - y) / zoom;
+            reactFlow.setViewport({
+              x: vpW / 2 - cx * targetZoom,
+              y: vpH / 2 - cy * targetZoom - 30,
+              zoom: targetZoom,
+            }, { duration: 0 });
+          });
+        }
       }, 120);
       return () => clearTimeout(timer);
     }
-  }, [isMobile, reactFlow]);
+  }, [isMobile, nodes, reactFlow]);
 
   useEffect(() => {
     if (!focusedNodeId) return;
