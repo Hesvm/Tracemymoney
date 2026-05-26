@@ -225,7 +225,8 @@ export function QuickAddModal({
     <AnimatePresence>
       {open && activeType && (
         <motion.div
-          className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-[#2f333b]/14 sm:px-5 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-[#2f333b]/14 px-3 sm:px-5 backdrop-blur-[2px]"
+          style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -234,8 +235,8 @@ export function QuickAddModal({
           }}
         >
           <motion.form
-            className="flex w-full max-w-full sm:max-w-[430px] flex-col rounded-t-[32px] sm:rounded-[32px] bg-white shadow-soft"
-            style={{ maxHeight: "88dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            className="flex w-full sm:max-w-[430px] flex-col rounded-[32px] bg-white shadow-soft"
+            style={{ maxHeight: "calc(100dvh - 24px)" }}
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}

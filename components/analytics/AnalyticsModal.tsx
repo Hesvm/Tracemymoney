@@ -39,7 +39,8 @@ export function AnalyticsModal({ open, onClose }: { open: boolean; onClose: () =
       {open && (
         <motion.div
           data-testid="analytics-backdrop"
-          className="fixed inset-0 z-30 flex items-end sm:grid sm:place-items-center bg-[#7e7567]/16 sm:px-3 sm:py-4 backdrop-blur-[2px]"
+          className="fixed inset-0 z-30 flex items-end sm:grid sm:place-items-center bg-[#7e7567]/16 px-3 sm:px-3 sm:py-4 backdrop-blur-[2px]"
+          style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -58,7 +59,8 @@ export function AnalyticsModal({ open, onClose }: { open: boolean; onClose: () =
             role="dialog"
             aria-modal="true"
             aria-labelledby="analytics-title"
-            className="relative z-10 flex h-[95dvh] w-full rounded-t-[28px] sm:h-[88vh] sm:w-[92vw] sm:max-w-[820px] sm:rounded-[36px] flex-col overflow-hidden bg-[#fbfaf7] shadow-[0_34px_90px_rgba(76,74,68,0.22),0_2px_0_rgba(255,255,255,0.82)_inset]"
+            className="relative z-10 flex w-full rounded-[32px] sm:h-[88vh] sm:w-[92vw] sm:max-w-[820px] sm:rounded-[36px] flex-col overflow-hidden bg-[#fbfaf7] shadow-[0_34px_90px_rgba(76,74,68,0.22),0_2px_0_rgba(255,255,255,0.82)_inset]"
+            style={{ maxHeight: "calc(100dvh - 24px)" }}
             initial={{ opacity: 0, scale: 0.96, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
