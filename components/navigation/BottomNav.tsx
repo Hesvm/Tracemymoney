@@ -68,10 +68,10 @@ export function BottomNav({
       <DockButton label="Analytics" onClick={onAnalyticsClick} className={analyticsOpen ? "bg-[#f3f0e9] text-[#626677]" : ""}>
         <BarChart3 className="size-5" strokeWidth={2.1} />
       </DockButton>
-      <DockButton label="Settings" onClick={onSettingsClick}>
+      <DockButton label="Settings" onClick={onSettingsClick} className="hidden sm:grid">
         <Settings className="size-5" strokeWidth={2.1} />
       </DockButton>
-      <DockButton label="Search" onClick={onSearchClick}>
+      <DockButton label="Search" onClick={onSearchClick} className="hidden sm:grid">
         <Search className="size-5" strokeWidth={2.1} />
       </DockButton>
     </nav>

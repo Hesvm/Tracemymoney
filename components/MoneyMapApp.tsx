@@ -30,7 +30,7 @@ import {
 } from "@/lib/sync/syncEngine";
 import type { MoneyNodeType } from "@/types/money";
 
-const MENU_WIDTH = 255;
+const MENU_WIDTH = 199;
 const GAP = 8;
 
 function getMenuPos(btn: HTMLButtonElement) {
@@ -178,7 +178,10 @@ export function MoneyMapApp() {
   return (
     <main className="relative min-h-[100dvh] overflow-hidden bg-canvas text-ink">
       <MoneyCanvas />
-      <TopBrandBar />
+      <TopBrandBar
+        onSettingsClick={() => setSettingsOpen(true)}
+        onSearchClick={() => setSearchOpen(true)}
+      />
       <AddTypeMenu
         open={menuOpen}
         menuPos={menuPos}
