@@ -186,7 +186,7 @@ function CanvasInner() {
         // Read nodes directly from Zustand at fire-time to avoid stale-closure
         // issues and dep-array race conditions that cancel this timer early.
         const currentNodes = useMoneyMapStore.getState().nodes;
-        const targetZoom = 0.85;
+        const targetZoom = 1.1;
         const incomeNode = currentNodes.find((n) => n.id === "node-income");
         if (incomeNode) {
           // Mobile node width = 200px, so center x offset = 100.
