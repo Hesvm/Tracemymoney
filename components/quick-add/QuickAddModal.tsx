@@ -259,7 +259,7 @@ export function QuickAddModal({
             </div>
 
             {/* scrollable fields */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="grid gap-4 pb-2 px-4 sm:px-6">
                 <Field label={copy.subject}>
                   <input

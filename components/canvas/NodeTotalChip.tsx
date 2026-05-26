@@ -39,7 +39,7 @@ export function NodeTotalChip({
   return (
     <div className="nodrag relative hidden md:flex group/chip">
       <span
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] font-semibold leading-none select-none cursor-default ${tintClasses[nodeType]}`}
+        className={`inline-flex h-8 items-center rounded-full border px-3 text-[12px] font-semibold leading-none select-none cursor-default ${tintClasses[nodeType]}`}
       >
         {label}
       </span>
