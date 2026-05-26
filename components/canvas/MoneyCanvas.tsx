@@ -183,12 +183,25 @@ function CanvasInner() {
     if (isMobile && !didFitMobile.current) {
       didFitMobile.current = true;
       const timer = setTimeout(() => {
+        // Fit all nodes to find the natural center, then boost zoom to 0.65
+        // so nodes are larger and more readable on mobile.
         reactFlow.fitView({ padding: 0.04, duration: 0 });
-        // Shift content up: decreasing vp.y moves canvas up so nodes appear higher.
-        // Bottom nav (~90px) > top bar (~52px) → visual center is above math center.
         window.requestAnimationFrame(() => {
-          const vp = reactFlow.getViewport();
-          reactFlow.setViewport({ ...vp, y: vp.y - 30 }, { duration: 0 });
+          const { x, y, zoom } = reactFlow.getViewport();
+          const vpW = window.innerWidth;
+          const vpH = window.innerHeight;
+          const targetZoom = 0.65;
+          // Canvas center chosen by fitView
+          const cx = (vpW / 2 - x) / zoom;
+          const cy = (vpH / 2 - y) / zoom;
+          // Keep Y center; clamp X so leftmost node (canvas x≈40) stays visible
+          const rawX = vpW / 2 - cx * targetZoom;
+          const minX = 10 - 40 * targetZoom; // keep Income ≥ 10px from left edge
+          reactFlow.setViewport({
+            x: Math.max(rawX, minX),
+            y: vpH / 2 - cy * targetZoom - 30,
+            zoom: targetZoom,
+          }, { duration: 0 });
         });
       }, 120);
       return () => clearTimeout(timer);
