@@ -39,6 +39,9 @@ export interface MoneyItem {
   parentId?: string;
   targetAmount?: MoneyAmount;
   category?: GoalCategory;
+  inputMode?: "fixed" | "percentage";
+  percentageValue?: number;
+  baseAmountSnapshot?: number;
   createdAt: string;
   updatedAt: string;
 }

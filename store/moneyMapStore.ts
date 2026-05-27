@@ -38,6 +38,9 @@ type AddPayload = {
   category?: GoalCategory;
   rateOverride?: number;
   rateSource?: import("@/types/money").RateSource;
+  inputMode?: "fixed" | "percentage";
+  percentageValue?: number;
+  baseAmountSnapshot?: number;
 };
 
 export type ContextMenuTarget =
