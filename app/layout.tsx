@@ -5,6 +5,19 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Trace My Money",
   description: "A quiet visual money-mapping workspace. Track income, expenses, savings, and goals across currencies.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: { url: "/icons/icon-180.png", sizes: "180x180" },
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Trace My Money",
+  },
   openGraph: {
     title: "Trace My Money",
     description: "A quiet visual money-mapping workspace. Track income, expenses, savings, and goals across currencies.",
@@ -24,6 +37,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#F7F5F2",
 };
 
 export default function RootLayout({
