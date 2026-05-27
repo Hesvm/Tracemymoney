@@ -198,6 +198,9 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
         recurrence: payload.recurrence ?? "none",
         parentId: payload.parentNodeId,
         category: payload.type === "goal" ? payload.category : undefined,
+        inputMode: payload.inputMode,
+        percentageValue: payload.percentageValue,
+        baseAmountSnapshot: payload.baseAmountSnapshot,
         createdAt: now,
         updatedAt: now,
       };
@@ -289,6 +292,9 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
                   recurrence: payload.type === "goal" ? "none" : payload.recurrence,
                   parentId: payload.parentNodeId || undefined,
                   category: payload.type === "goal" ? payload.category : undefined,
+                  inputMode: payload.inputMode,
+                  percentageValue: payload.percentageValue,
+                  baseAmountSnapshot: payload.baseAmountSnapshot,
                   updatedAt: mutatedAt,
                 }
               : i
