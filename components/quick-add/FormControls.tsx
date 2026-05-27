@@ -181,12 +181,12 @@ export function AmountInput({
   }, [menuOpen]);
 
   const badgeBase =
-    "absolute right-2 top-1/2 -translate-y-1/2 h-8 rounded-full px-3 text-[12px] font-bold flex items-center gap-1 transition select-none";
+    "absolute right-1.5 top-1/2 -translate-y-1/2 h-8 rounded-full px-2.5 text-[12px] font-bold flex items-center gap-1 transition select-none";
   const badgeFixed = `${badgeBase} bg-[#f0ede8] text-[#9a9da9] hover:bg-[#e8e4dc] hover:text-[#6b6860]`;
   const badgePct = `${badgeBase} bg-[#fff1d7] text-[#a16325] hover:bg-[#fde8b8]`;
 
   const sharedInputClass =
-    "h-12 w-full rounded-full bg-[#fbfaf7] pl-4 pr-[86px] text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
+    "h-12 w-full rounded-full bg-[#fbfaf7] pl-4 pr-[72px] text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
 
   return (
     <div className="relative">
@@ -228,14 +228,14 @@ export function AmountInput({
         />
       )}
       {onModeChange && (
-        <div ref={menuRef} className="absolute right-2 top-1/2 -translate-y-1/2">
+        <div ref={menuRef} className="absolute right-1.5 top-1/2 -translate-y-1/2">
           <button
             type="button"
             className={mode === "percentage" ? badgePct : badgeFixed}
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Select amount type"
           >
-            {mode === "percentage" ? "%" : "fixed"}
+            {mode === "percentage" ? "%" : "fix"}
             <span style={{ fontSize: 9, opacity: 0.7 }}>▼</span>
           </button>
           {menuOpen && (
