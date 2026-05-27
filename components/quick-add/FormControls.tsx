@@ -137,44 +137,94 @@ export function AmountInput({
   currency,
   value,
   onValueChange,
-  resetKey
+  resetKey,
+  mode = "fixed",
+  onModeChange,
 }: {
   currency: Currency;
   value: number;
   onValueChange: (value: number) => void;
   resetKey: number;
+  mode?: "fixed" | "percentage";
+  onModeChange?: (mode: "fixed" | "percentage") => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [display, setDisplay] = useState("");
+  const [pctDisplay, setPctDisplay] = useState("");
 
+  // Sync fixed-amount display
   useEffect(() => {
-    setDisplay(value ? formatAmountDisplay(String(value), currency) : "");
-  }, [currency, resetKey, value]);
+    if (mode === "fixed") {
+      setDisplay(value ? formatAmountDisplay(String(value), currency) : "");
+    }
+  }, [currency, resetKey, value, mode]);
+
+  // Sync percentage display
+  useEffect(() => {
+    if (mode === "percentage") {
+      setPctDisplay(value ? String(value) : "");
+    }
+  }, [value, resetKey, mode]);
+
+  const badgeBase =
+    "absolute right-2 top-1/2 -translate-y-1/2 h-8 rounded-full px-3 text-[12px] font-bold flex items-center gap-1 transition select-none";
+  const badgeFixed = `${badgeBase} bg-[#f0ede8] text-[#9a9da9] hover:bg-[#e8e4dc] hover:text-[#6b6860]`;
+  const badgePct = `${badgeBase} bg-[#fff1d7] text-[#a16325] hover:bg-[#fde8b8]`;
+
+  const sharedInputClass =
+    "h-12 w-full rounded-full bg-[#fbfaf7] pl-4 pr-[86px] text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
 
   return (
-    <input
-      ref={inputRef}
-      className="h-12 rounded-full bg-[#fbfaf7] px-4 text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]"
-      inputMode={currency === "USD" ? "decimal" : "numeric"}
-      name="amountDisplay"
-      placeholder="20,000,000"
-      value={display}
-      onChange={(event) => {
-        const nextRaw = event.target.value;
-        const caret = event.target.selectionStart ?? nextRaw.length;
-        const digitsBeforeCaret = nextRaw.slice(0, caret).replace(/\D/g, "").length;
-        const nextDisplay = formatAmountDisplay(nextRaw, currency);
-
-        setDisplay(nextDisplay);
-        onValueChange(parseAmount(nextDisplay, currency));
-
-        window.requestAnimationFrame(() => {
-          const nextCaret = caretFromDigitCount(nextDisplay, digitsBeforeCaret);
-          inputRef.current?.setSelectionRange(nextCaret, nextCaret);
-        });
-      }}
-      required
-    />
+    <div className="relative">
+      {mode === "percentage" ? (
+        <input
+          className={sharedInputClass}
+          inputMode="numeric"
+          name="amountDisplay"
+          placeholder="30"
+          value={pctDisplay}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\D/g, "");
+            setPctDisplay(raw);
+            onValueChange(raw === "" ? 0 : parseInt(raw, 10));
+          }}
+          required
+        />
+      ) : (
+        <input
+          ref={inputRef}
+          className={sharedInputClass}
+          inputMode={currency === "USD" ? "decimal" : "numeric"}
+          name="amountDisplay"
+          placeholder="20,000,000"
+          value={display}
+          onChange={(event) => {
+            const nextRaw = event.target.value;
+            const caret = event.target.selectionStart ?? nextRaw.length;
+            const digitsBeforeCaret = nextRaw.slice(0, caret).replace(/\D/g, "").length;
+            const nextDisplay = formatAmountDisplay(nextRaw, currency);
+            setDisplay(nextDisplay);
+            onValueChange(parseAmount(nextDisplay, currency));
+            window.requestAnimationFrame(() => {
+              const nextCaret = caretFromDigitCount(nextDisplay, digitsBeforeCaret);
+              inputRef.current?.setSelectionRange(nextCaret, nextCaret);
+            });
+          }}
+          required
+        />
+      )}
+      {onModeChange && (
+        <button
+          type="button"
+          className={mode === "percentage" ? badgePct : badgeFixed}
+          onClick={() => onModeChange(mode === "fixed" ? "percentage" : "fixed")}
+          aria-label={mode === "percentage" ? "Switch to fixed amount" : "Switch to percentage"}
+        >
+          {mode === "percentage" ? "%" : "fixed"}
+          <span style={{ fontSize: 9, opacity: 0.7 }}>▼</span>
+        </button>
+      )}
+    </div>
   );
 }
 
