@@ -104,3 +104,11 @@ textarea {
 .react-flow__attribution {
   display: none;
 }
+
+/* Soft highlight for connection targets during drag */
+.is-connecting .money-node {
+  transition: box-shadow 0.15s ease;
+}
+.is-connecting .money-node {
+  box-shadow: 0 0 0 2px rgba(216, 205, 185, 0.55), 0 8px 32px rgba(0, 0, 0, 0.06);
+}

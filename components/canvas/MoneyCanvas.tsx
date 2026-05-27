@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -61,6 +61,7 @@ function CanvasInner() {
   const reactFlow = useReactFlow();
   const isMobile = useMobile();
   const didFitMobile = useRef(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const defaultViewport = useMemo(() => ({ x: 260, y: 145, zoom: 0.88 }), []);
   const reconnectSuccessful = useRef(false);
@@ -162,12 +163,21 @@ function CanvasInner() {
     []
   );
 
+  const handleConnectStart = useCallback(() => {
+    setIsConnecting(true);
+  }, []);
+
+  const handleConnectEnd = useCallback(() => {
+    setIsConnecting(false);
+  }, []);
+
   const handleNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault();
+      if (isMobile) return; // handled by useLongPress in MoneyNode
       openContextMenu(event.clientX, event.clientY, { type: "node", nodeId: node.id });
     },
-    [openContextMenu]
+    [openContextMenu, isMobile]
   );
 
   const handlePaneContextMenu = useCallback((event: React.MouseEvent | MouseEvent) => {
@@ -237,7 +247,7 @@ function CanvasInner() {
 
   return (
     <ReactFlow
-      className="money-canvas"
+      className={`money-canvas${isConnecting ? " is-connecting" : ""}`}
       nodes={nodes}
       edges={edgesWithSelection}
       nodeTypes={nodeTypes}
@@ -245,18 +255,21 @@ function CanvasInner() {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={handleConnect}
+      onConnectStart={handleConnectStart}
+      onConnectEnd={handleConnectEnd}
       onEdgeClick={handleEdgeClick}
       edgesReconnectable
       onReconnectStart={handleReconnectStart}
       onReconnect={handleReconnect}
       onReconnectEnd={handleReconnectEnd}
-      reconnectRadius={20}
+      reconnectRadius={isMobile ? 36 : 20}
+      connectionRadius={isMobile ? 36 : 20}
       onNodeContextMenu={handleNodeContextMenu}
       onPaneContextMenu={handlePaneContextMenu}
       defaultViewport={defaultViewport}
       minZoom={isMobile ? 0.25 : 0.15}
       maxZoom={isMobile ? 2.5 : 3.5}
-      panOnDrag
+      panOnDrag={!isConnecting}
       zoomOnPinch
       zoomOnScroll={!isMobile}
       nodesDraggable

@@ -9,6 +9,8 @@ import { formatConvertedAmount, formatPrimaryAmount } from "@/lib/formatters";
 import { formatShortDate, isItemInMonth } from "@/lib/months";
 import { getGoalImage } from "@/lib/analytics";
 import { useAnimatedRate } from "@/hooks/useAnimatedRate";
+import { useLongPress } from "@/hooks/useLongPress";
+import { useMobile } from "@/hooks/useMobile";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 import { EmptyNodeAction } from "@/components/canvas/EmptyNodeAction";
 import { NodeTotalChip } from "@/components/canvas/NodeTotalChip";
@@ -67,6 +69,11 @@ function MoneyRow({
   const title = item.title ? ` :: ${item.title}` : "";
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
   const isRecurring = item.recurrence && item.recurrence !== "none";
+  const isMobile = useMobile();
+  const itemLongPress = useLongPress(
+    (x, y) => openContextMenu(x, y, { type: "item", nodeId, itemId: item.id }),
+    { delay: 420 }
+  );
 
   return (
     <motion.li
@@ -76,6 +83,7 @@ function MoneyRow({
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       layout
+      {...(isMobile ? itemLongPress : {})}
       onContextMenu={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -115,6 +123,11 @@ function MoneyRow({
 
 function GoalRow({ item, nodeId }: { item: MoneyItem; nodeId: string }) {
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
+  const isMobile = useMobile();
+  const itemLongPress = useLongPress(
+    (x, y) => openContextMenu(x, y, { type: "item", nodeId, itemId: item.id }),
+    { delay: 420 }
+  );
   const category = item.category ?? "other";
   const targetAmt = item.targetAmount ?? item.amount;
   const savedAmt = item.amount;
@@ -134,6 +147,7 @@ function GoalRow({ item, nodeId }: { item: MoneyItem; nodeId: string }) {
         e.stopPropagation();
         openContextMenu(e.clientX, e.clientY, { type: "item", nodeId, itemId: item.id });
       }}
+      {...(isMobile ? itemLongPress : {})}
     >
       <article className="grid grid-cols-[56px_1fr_auto] items-center gap-4 rounded-[24px] bg-[#fbfaf7] p-3.5">
         <div className="grid size-14 place-items-center overflow-hidden rounded-[20px] bg-white shadow-[0_10px_24px_rgba(76,74,68,0.08)]">
@@ -229,6 +243,12 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
   );
 
   const { displayed: animatedRate, ticked: rateTick } = useAnimatedRate(liveRate);
+  const isMobile = useMobile();
+  const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
+  const nodeLongPress = useLongPress(
+    (x, y) => openContextMenu(x, y, { type: "node", nodeId: id }),
+    { delay: 420 }
+  );
 
   const nodeItems = data.itemIds
     .map((id) => items.find((item) => item.id === id))
@@ -243,6 +263,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       } ${selected ? "money-node-selected" : ""}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      {...(isMobile ? nodeLongPress : {})}
       style={{
         "--handle-opacity": isHovering || selected ? 1 : 0
       } as React.CSSProperties}
@@ -251,6 +272,12 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
         .money-node:hover .node-handle,
         .money-node-selected .node-handle {
           opacity: 1;
+        }
+        @media (max-width: 768px) {
+          .node-handle {
+            width: 20px !important;
+            height: 20px !important;
+          }
         }
       `}</style>
       <NodeHandle position={Position.Top} />
