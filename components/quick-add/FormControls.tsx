@@ -149,8 +149,10 @@ export function AmountInput({
   onModeChange?: (mode: "fixed" | "percentage") => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [display, setDisplay] = useState("");
   const [pctDisplay, setPctDisplay] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Sync fixed-amount display
   useEffect(() => {
@@ -165,6 +167,18 @@ export function AmountInput({
       setPctDisplay(value ? String(value) : "");
     }
   }, [value, resetKey, mode]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [menuOpen]);
 
   const badgeBase =
     "absolute right-2 top-1/2 -translate-y-1/2 h-8 rounded-full px-3 text-[12px] font-bold flex items-center gap-1 transition select-none";
@@ -214,15 +228,39 @@ export function AmountInput({
         />
       )}
       {onModeChange && (
-        <button
-          type="button"
-          className={mode === "percentage" ? badgePct : badgeFixed}
-          onClick={() => onModeChange(mode === "fixed" ? "percentage" : "fixed")}
-          aria-label={mode === "percentage" ? "Switch to fixed amount" : "Switch to percentage"}
-        >
-          {mode === "percentage" ? "%" : "fixed"}
-          <span style={{ fontSize: 9, opacity: 0.7 }}>▼</span>
-        </button>
+        <div ref={menuRef} className="absolute right-2 top-1/2 -translate-y-1/2">
+          <button
+            type="button"
+            className={mode === "percentage" ? badgePct : badgeFixed}
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Select amount type"
+          >
+            {mode === "percentage" ? "%" : "fixed"}
+            <span style={{ fontSize: 9, opacity: 0.7 }}>▼</span>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[148px] overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#f0ede8]">
+              {(["fixed", "percentage"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold transition hover:bg-[#fbfaf7] ${
+                    mode === opt ? "text-[#2f333b]" : "text-[#9a9da9]"
+                  }`}
+                  onClick={() => {
+                    onModeChange(opt);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <span className={`grid size-4 place-items-center rounded-full border ${mode === opt ? "border-[#2f333b] bg-[#2f333b]" : "border-[#d8d5ce]"}`}>
+                    {mode === opt && <span className="block size-1.5 rounded-full bg-white" />}
+                  </span>
+                  {opt === "fixed" ? "Fixed amount" : "% of income"}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

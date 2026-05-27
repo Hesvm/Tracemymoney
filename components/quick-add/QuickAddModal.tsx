@@ -326,21 +326,16 @@ export function QuickAddModal({
                       />
                     )}
                     {inputMode === "percentage" && activeType !== "income" && (
-                      <div className="flex items-center gap-2 rounded-[14px] bg-[#f7f5ef] border border-[#ede9de] px-4 py-3 text-[13px]">
+                      <p className="px-1 text-[12px] leading-none">
                         {pctPreview && pctPreview.baseSnapshot > 0 ? (
-                          <>
-                            <span className="font-semibold text-[#2f333b]">
-                              {amount}% of {formatPrimaryAmount({ amount: pctPreview.baseSnapshot, currency })}
-                            </span>
-                            <span className="font-bold text-[#c9b89a] mx-1">=</span>
-                            <span className="font-bold text-[#2d7f36]">
-                              {formatPrimaryAmount({ amount: pctPreview.amount, currency })}
-                            </span>
-                          </>
+                          <span className="text-[#a8a39a]">
+                            {amount}% of {formatPrimaryAmount({ amount: pctPreview.baseSnapshot, currency })}{" "}
+                            <span className="font-semibold text-[#2d7f36]">= {formatPrimaryAmount({ amount: pctPreview.amount, currency })}</span>
+                          </span>
                         ) : (
                           <span className="text-[#a16325]">No income recorded for this month</span>
                         )}
-                      </div>
+                      </p>
                     )}
                   </>
                 )}
