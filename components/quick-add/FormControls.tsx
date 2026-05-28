@@ -138,130 +138,45 @@ export function AmountInput({
   value,
   onValueChange,
   resetKey,
-  mode = "fixed",
-  onModeChange,
 }: {
   currency: Currency;
   value: number;
   onValueChange: (value: number) => void;
   resetKey: number;
-  mode?: "fixed" | "percentage";
-  onModeChange?: (mode: "fixed" | "percentage") => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [display, setDisplay] = useState("");
-  const [pctDisplay, setPctDisplay] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Sync fixed-amount display
   useEffect(() => {
-    if (mode === "fixed") {
-      setDisplay(value ? formatAmountDisplay(String(value), currency) : "");
-    }
-  }, [currency, resetKey, value, mode]);
+    setDisplay(value ? formatAmountDisplay(String(value), currency) : "");
+  }, [currency, resetKey, value]);
 
-  // Sync percentage display
-  useEffect(() => {
-    if (mode === "percentage") {
-      setPctDisplay(value ? String(value) : "");
-    }
-  }, [value, resetKey, mode]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!menuOpen) return;
-    function handleOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [menuOpen]);
-
-  const badgeBase =
-    "absolute right-1.5 top-1/2 -translate-y-1/2 h-8 rounded-full px-2.5 text-[12px] font-bold flex items-center gap-1 transition select-none";
-  const badgeFixed = `${badgeBase} bg-[#f0ede8] text-[#9a9da9] hover:bg-[#e8e4dc] hover:text-[#6b6860]`;
-  const badgePct = `${badgeBase} bg-[#fff1d7] text-[#a16325] hover:bg-[#fde8b8]`;
-
-  const sharedInputClass =
-    "h-12 w-full rounded-full bg-[#fbfaf7] pl-4 pr-[72px] text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
+  const inputClass =
+    "h-12 w-full rounded-full bg-[#fbfaf7] px-4 text-[16px] text-[#2f333b] shadow-[inset_0_0_0_1px_#ecebe7] outline-none transition placeholder:text-[#b1b1b8] hover:bg-white focus:bg-white focus:shadow-[inset_0_0_0_1px_#d7d1c4,0_0_0_4px_rgba(215,209,196,0.22)]";
 
   return (
     <div className="relative">
-      {mode === "percentage" ? (
-        <input
-          className={sharedInputClass}
-          inputMode="numeric"
-          name="amountDisplay"
-          placeholder="30"
-          value={pctDisplay}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/\D/g, "");
-            setPctDisplay(raw);
-            onValueChange(raw === "" ? 0 : parseInt(raw, 10));
-          }}
-          required
-        />
-      ) : (
-        <input
-          ref={inputRef}
-          className={sharedInputClass}
-          inputMode={currency === "USD" ? "decimal" : "numeric"}
-          name="amountDisplay"
-          placeholder="20,000,000"
-          value={display}
-          onChange={(event) => {
-            const nextRaw = event.target.value;
-            const caret = event.target.selectionStart ?? nextRaw.length;
-            const digitsBeforeCaret = nextRaw.slice(0, caret).replace(/\D/g, "").length;
-            const nextDisplay = formatAmountDisplay(nextRaw, currency);
-            setDisplay(nextDisplay);
-            onValueChange(parseAmount(nextDisplay, currency));
-            window.requestAnimationFrame(() => {
-              const nextCaret = caretFromDigitCount(nextDisplay, digitsBeforeCaret);
-              inputRef.current?.setSelectionRange(nextCaret, nextCaret);
-            });
-          }}
-          required
-        />
-      )}
-      {onModeChange && (
-        <div ref={menuRef} className="absolute right-1.5 top-1/2 -translate-y-1/2">
-          <button
-            type="button"
-            className={mode === "percentage" ? badgePct : badgeFixed}
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Select amount type"
-          >
-            {mode === "percentage" ? "%" : "fix"}
-            <span style={{ fontSize: 9, opacity: 0.7 }}>▼</span>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[148px] overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#f0ede8]">
-              {(["fixed", "percentage"] as const).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-semibold transition hover:bg-[#fbfaf7] ${
-                    mode === opt ? "text-[#2f333b]" : "text-[#9a9da9]"
-                  }`}
-                  onClick={() => {
-                    onModeChange(opt);
-                    setMenuOpen(false);
-                  }}
-                >
-                  <span className={`grid size-4 place-items-center rounded-full border ${mode === opt ? "border-[#2f333b] bg-[#2f333b]" : "border-[#d8d5ce]"}`}>
-                    {mode === opt && <span className="block size-1.5 rounded-full bg-white" />}
-                  </span>
-                  {opt === "fixed" ? "Fixed amount" : "% of income"}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <input
+        ref={inputRef}
+        className={inputClass}
+        inputMode={currency === "USD" ? "decimal" : "numeric"}
+        name="amountDisplay"
+        placeholder="20,000,000"
+        value={display}
+        onChange={(event) => {
+          const nextRaw = event.target.value;
+          const caret = event.target.selectionStart ?? nextRaw.length;
+          const digitsBeforeCaret = nextRaw.slice(0, caret).replace(/\D/g, "").length;
+          const nextDisplay = formatAmountDisplay(nextRaw, currency);
+          setDisplay(nextDisplay);
+          onValueChange(parseAmount(nextDisplay, currency));
+          window.requestAnimationFrame(() => {
+            const nextCaret = caretFromDigitCount(nextDisplay, digitsBeforeCaret);
+            inputRef.current?.setSelectionRange(nextCaret, nextCaret);
+          });
+        }}
+        required
+      />
     </div>
   );
 }

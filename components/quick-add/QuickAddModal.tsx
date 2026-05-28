@@ -10,7 +10,6 @@ import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { Currency, GoalCategory, MoneyNodeType, RecurrenceType } from "@/types/money";
 import { AmountInput, CurrencySegmentedToggle, GoalCategoryChips, recurrenceOptions, StyledDatePicker, StyledDropdown } from "./FormControls";
 import { getHistoricalRate } from "@/lib/exchangeRates/getHistoricalRate";
-import { calculatePercentageAmount, type PercentageResult } from "@/lib/percentageAmount";
 
 const labels: Record<MoneyNodeType, { title: string; submit: string; subject: string; amount: string }> = {
   income: { title: "Add Income", submit: "Add Income", subject: "Source", amount: "Amount" },
@@ -103,7 +102,6 @@ export function QuickAddModal({
   const [resolvedRateHint, setResolvedRateHint] = useState<"exact" | "nearest_previous" | null>(null);
   const [manualRate, setManualRate] = useState<string>("");
   const [isRateManual, setIsRateManual] = useState(false);
-  const [inputMode, setInputMode] = useState<"fixed" | "percentage">("fixed");
   const copy = activeType ? labels[activeType] : labels.income;
 
   const parentOptions = useMemo(
@@ -111,17 +109,10 @@ export function QuickAddModal({
     [nodes]
   );
 
-  const pctPreview = useMemo((): PercentageResult | null => {
-    if (inputMode !== "percentage" || !activeType || activeType === "bucket" || activeType === "income") return null;
-    if (!amount) return null;
-    return calculatePercentageAmount(amount, date.slice(0, 7), currency, nodes, items, liveRate);
-  }, [inputMode, amount, date, currency, nodes, items, liveRate, activeType]);
-
   function resetForm() {
     setCurrency(defaultCurrency);
     setRecurrence("none");
     setAmount(0);
-    setInputMode("fixed");
     setDate(todayIsoDate());
     setParentNodeId("");
     setGoalCategory("phone");
@@ -194,14 +185,7 @@ export function QuickAddModal({
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
 
-    const isPercentageMode =
-      inputMode === "percentage" &&
-      activeType !== "bucket" &&
-      activeType !== "income" &&
-      pctPreview !== null &&
-      pctPreview.baseSnapshot > 0;
-
-    if (title && amount && activeType !== "bucket" && inputMode === "fixed") {
+    if (title && amount && activeType !== "bucket") {
       saveAmountSuggestion(title, amount);
     }
 
@@ -211,13 +195,11 @@ export function QuickAddModal({
       : resolvedRate ?? undefined;
     const effectiveRateSource = isRateManual ? "manual" : resolvedRateSource;
 
-    const resolvedAmount = isPercentageMode ? pctPreview!.amount : amount;
-
     const payload = {
       type: activeType,
       title,
-      amount: activeType === "bucket" ? undefined : (activeType === "goal" ? undefined : resolvedAmount),
-      targetAmount: activeType === "goal" ? resolvedAmount : undefined,
+      amount: activeType === "bucket" ? undefined : (activeType === "goal" ? undefined : amount),
+      targetAmount: activeType === "goal" ? amount : undefined,
       currency,
       date,
       note: String(form.get("note") ?? ""),
@@ -226,9 +208,6 @@ export function QuickAddModal({
       category: activeType === "goal" ? goalCategory : undefined,
       rateOverride: effectiveRate,
       rateSource: effectiveRateSource,
-      inputMode: isPercentageMode ? ("percentage" as const) : undefined,
-      percentageValue: isPercentageMode ? amount : undefined,
-      baseAmountSnapshot: isPercentageMode ? pctPreview!.baseSnapshot : undefined,
     };
 
     if (editItemId) {
@@ -303,40 +282,20 @@ export function QuickAddModal({
                           value={amount}
                           onValueChange={setAmount}
                           resetKey={resetKey}
-                          mode={activeType === "income" ? "fixed" : inputMode}
-                          onModeChange={activeType !== "income" ? (newMode) => {
-                            setInputMode(newMode);
-                            setAmount(0);
-                            setResetKey((k) => k + 1);
-                          } : undefined}
                         />
                       </Field>
                       <Field label="Currency">
                         <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
                       </Field>
                     </div>
-                    {inputMode === "fixed" && (
-                      <SuggestionChips
-                        title={titleValue}
-                        currency={currency}
-                        onSelect={(v) => {
-                          setAmount(v);
-                          setResetKey((k) => k + 1);
-                        }}
-                      />
-                    )}
-                    {inputMode === "percentage" && activeType !== "income" && (
-                      <p className="px-1 text-[12px] leading-none">
-                        {pctPreview && pctPreview.baseSnapshot > 0 ? (
-                          <span className="text-[#a8a39a]">
-                            {amount}% of {formatPrimaryAmount({ amount: pctPreview.baseSnapshot, currency })}{" "}
-                            <span className="font-semibold text-[#2d7f36]">= {formatPrimaryAmount({ amount: pctPreview.amount, currency })}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[#a16325]">No income recorded for this month</span>
-                        )}
-                      </p>
-                    )}
+                    <SuggestionChips
+                      title={titleValue}
+                      currency={currency}
+                      onSelect={(v) => {
+                        setAmount(v);
+                        setResetKey((k) => k + 1);
+                      }}
+                    />
                   </>
                 )}
 
@@ -408,11 +367,7 @@ export function QuickAddModal({
             <div className="shrink-0 px-4 pt-2 pb-4 sm:px-6 sm:pt-3 sm:pb-6">
               <button
                 type="submit"
-                disabled={
-                  inputMode === "percentage" &&
-                  (!pctPreview || pctPreview.baseSnapshot === 0)
-                }
-                className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed ${submitButtonClass(activeType)}`}
+                className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
               >
                 {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
               </button>
