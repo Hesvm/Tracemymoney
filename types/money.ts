@@ -42,6 +42,8 @@ export interface MoneyItem {
   inputMode?: "fixed" | "percentage";
   percentageValue?: number;
   baseAmountSnapshot?: number;
+  percentageBaseType?: "bucket_inflow";
+  percentageBaseNodeId?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -41,6 +41,8 @@ type AddPayload = {
   inputMode?: "fixed" | "percentage";
   percentageValue?: number;
   baseAmountSnapshot?: number;
+  percentageBaseType?: "bucket_inflow";
+  percentageBaseNodeId?: string;
 };
 
 export type ContextMenuTarget =
@@ -201,6 +203,8 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
         inputMode: payload.inputMode,
         percentageValue: payload.percentageValue,
         baseAmountSnapshot: payload.baseAmountSnapshot,
+        percentageBaseType: payload.percentageBaseType,
+        percentageBaseNodeId: payload.percentageBaseNodeId,
         createdAt: now,
         updatedAt: now,
       };
@@ -295,6 +299,8 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
                   inputMode: payload.inputMode,
                   percentageValue: payload.percentageValue,
                   baseAmountSnapshot: payload.baseAmountSnapshot,
+                  percentageBaseType: payload.percentageBaseType,
+                  percentageBaseNodeId: payload.percentageBaseNodeId,
                   updatedAt: mutatedAt,
                 }
               : i
