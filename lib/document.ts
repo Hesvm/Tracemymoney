@@ -1,7 +1,7 @@
 import { decorateEdge } from "@/lib/edges";
 import { defaultAppSettings } from "@/store/moneyMapStore";
 import { normalizeMonth } from "@/lib/months";
-import { initialEdges, initialItems, initialNodes } from "@/lib/initialData";
+import { initialEdges, initialNodes } from "@/lib/initialData";
 import type {
   AppSettings,
   CalendarSystem,
@@ -107,13 +107,11 @@ export function applyDocument(doc: UserDocument): Partial<DocumentSlice> {
   return {
     nodes: ensureSystemNodes(doc.nodes, doc.items),
     edges: isEmpty ? initialEdges : doc.edges.map(decorateEdge),
-    items: isEmpty
-      ? initialItems
-      : doc.items.map((item) => ({
-          ...item,
-          amount: migrateMoneyAmount(item.amount as unknown as LegacyMoneyAmount),
-          targetAmount: migrateMoneyAmount(item.targetAmount as unknown as LegacyMoneyAmount),
-        })),
+    items: doc.items.map((item) => ({
+      ...item,
+      amount: migrateMoneyAmount(item.amount as unknown as LegacyMoneyAmount),
+      targetAmount: migrateMoneyAmount(item.targetAmount as unknown as LegacyMoneyAmount),
+    })),
     settings: { ...defaultAppSettings, ...doc.settings },
     selectedMonth: normalizeMonth(doc.selectedMonth),
     calendarSystem: doc.calendarSystem,

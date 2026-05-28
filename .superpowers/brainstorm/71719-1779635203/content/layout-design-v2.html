@@ -1,0 +1,153 @@
+<style>
+  body { background: #f0ede8; font-family: -apple-system, "SF Pro Display", system-ui, sans-serif; padding: 24px 20px 40px; }
+
+  h2 { font-size: 20px; font-weight: 700; color: #2f333b; letter-spacing: -0.03em; margin: 0 0 6px; }
+  .subtitle { font-size: 13px; color: #8d919e; font-weight: 500; margin: 0 0 28px; }
+
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 680px; margin: 0 auto; }
+  .full { grid-column: span 2; }
+
+  .ghost-card { border-radius: 26px; padding: 18px 20px; background: white; box-shadow: 0 3px 14px rgba(76,74,68,0.07); opacity: 0.45; }
+  .ghost-label { font-size: 12px; font-weight: 700; color: #9a958d; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+  .ghost-desc { font-size: 13px; font-weight: 500; color: #bbb8b3; }
+  .ghost-bar { background: #f4f2ee; border-radius: 10px; height: 80px; margin-top: 12px; }
+
+  .overview-card {
+    grid-column: span 2;
+    border-radius: 26px;
+    background: #fffdf8;
+    box-shadow: 0 4px 22px rgba(76,74,68,0.10), 0 1px 0 rgba(255,255,255,0.85) inset;
+    padding: 20px 22px 18px;
+  }
+
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .card-title { font-size: 19px; font-weight: 700; color: #2f333b; letter-spacing: -0.03em; line-height: 1; }
+
+  /* Timeframe chips */
+  .chips { display: flex; gap: 5px; }
+  .chip {
+    font-size: 12px; font-weight: 700; color: #9a958d;
+    padding: 5px 11px; border-radius: 99px;
+    background: #f4f2ee; cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: all 0.15s ease;
+  }
+  .chip.active { background: #2f333b; color: white; }
+
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .metric { background: #f7f6f3; border-radius: 16px; padding: 11px 13px; }
+  .metric-label { font-size: 10px; font-weight: 700; color: #a09b94; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; }
+  .metric-value { font-size: 19px; font-weight: 700; color: #2f333b; letter-spacing: -0.04em; line-height: 1; }
+  .metric-value.pos { color: #5a9e6a; }
+
+  .chart-wrap { background: #fbfaf7; border-radius: 16px; padding: 10px 10px 6px; height: 100px; overflow: hidden; position: relative; }
+  .chart-wrap svg { width: 100%; height: 100%; display: block; }
+
+  .legend-row { display: flex; gap: 14px; margin-top: 10px; align-items: center; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .legend-item { font-size: 11px; font-weight: 600; color: #9a958d; display: flex; align-items: center; }
+</style>
+
+<h2>Layout & Card Design — v2</h2>
+<p class="subtitle">Timeframe chips, month markers, no subtitle.</p>
+
+<div class="modal-grid">
+
+  <div class="ghost-card full">
+    <div class="ghost-label">Money Flow</div>
+    <div class="ghost-desc">Sankey diagram — existing, untouched</div>
+    <div class="ghost-bar" style="height:120px;background:linear-gradient(90deg,#f4f2ee 0%,#ede9e3 100%)"></div>
+  </div>
+
+  <div class="overview-card">
+    <div class="card-header">
+      <div class="card-title">Overview</div>
+      <div class="chips">
+        <div class="chip">1m</div>
+        <div class="chip">3m</div>
+        <div class="chip active">6m</div>
+        <div class="chip">1y</div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Income</div>
+        <div class="metric-value">840M T</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Expenses</div>
+        <div class="metric-value">520M T</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Net</div>
+        <div class="metric-value pos">+320M</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <svg viewBox="0 0 400 84" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="ig" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a8ceb0" stop-opacity="0.48"/>
+            <stop offset="100%" stop-color="#a8ceb0" stop-opacity="0.03"/>
+          </linearGradient>
+          <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e7aeb7" stop-opacity="0.42"/>
+            <stop offset="100%" stop-color="#e7aeb7" stop-opacity="0.03"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Dashed month dividers (5 lines = 6 segments) -->
+        <line x1="66"  y1="4" x2="66"  y2="80" stroke="#d8d4cc" stroke-width="1" stroke-dasharray="3,4"/>
+        <line x1="133" y1="4" x2="133" y2="80" stroke="#d8d4cc" stroke-width="1" stroke-dasharray="3,4"/>
+        <line x1="200" y1="4" x2="200" y2="80" stroke="#d8d4cc" stroke-width="1" stroke-dasharray="3,4"/>
+        <line x1="267" y1="4" x2="267" y2="80" stroke="#d8d4cc" stroke-width="1" stroke-dasharray="3,4"/>
+        <line x1="334" y1="4" x2="334" y2="80" stroke="#d8d4cc" stroke-width="1" stroke-dasharray="3,4"/>
+
+        <!-- Month labels -->
+        <text x="33"  y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">Jan</text>
+        <text x="100" y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">Feb</text>
+        <text x="167" y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">Mar</text>
+        <text x="233" y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">Apr</text>
+        <text x="300" y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">May</text>
+        <text x="367" y="80" text-anchor="middle" font-size="8" fill="#b5b0aa" font-family="system-ui" font-weight="600">Jun</text>
+
+        <!-- Income area -->
+        <path d="M0,60 C50,52 100,40 150,32 C200,24 250,20 300,14 C340,9 370,7 400,5 L400,72 L0,72 Z" fill="url(#ig)"/>
+        <path d="M0,60 C50,52 100,40 150,32 C200,24 250,20 300,14 C340,9 370,7 400,5" fill="none" stroke="#a8ceb0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Expense area -->
+        <path d="M0,70 C50,68 100,62 150,56 C200,50 250,50 300,46 C340,42 370,40 400,38 L400,72 L0,72 Z" fill="url(#eg)"/>
+        <path d="M0,70 C50,68 100,62 150,56 C200,50 250,50 300,46 C340,42 370,40 400,38" fill="none" stroke="#e7aeb7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="legend-row">
+      <span class="legend-item"><span class="legend-dot" style="background:#a8ceb0"></span>Income</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#e7aeb7"></span>Expenses</span>
+    </div>
+  </div>
+
+  <div class="ghost-card half">
+    <div class="ghost-label">Real Value</div>
+    <div class="ghost-desc">Existing — untouched</div>
+    <div class="ghost-bar"></div>
+  </div>
+  <div class="ghost-card half">
+    <div class="ghost-label">Goals</div>
+    <div class="ghost-desc">Existing — untouched</div>
+    <div class="ghost-bar"></div>
+  </div>
+  <div class="ghost-card half">
+    <div class="ghost-label">Money Leaks</div>
+    <div class="ghost-desc">Existing — untouched</div>
+    <div class="ghost-bar"></div>
+  </div>
+  <div class="ghost-card half">
+    <div class="ghost-label">Income Rhythm</div>
+    <div class="ghost-desc">Existing — untouched</div>
+    <div class="ghost-bar"></div>
+  </div>
+
+</div>

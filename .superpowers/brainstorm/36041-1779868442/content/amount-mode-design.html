@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Percentage Amount Mode — Design Options</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f0ede8;
+    font-family: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+  h1 { font-size: 20px; font-weight: 700; color: #2f333b; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #6b6860; margin-bottom: 32px; }
+
+  .layouts { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 900px) { .layouts { grid-template-columns: 1fr; } }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { border-color: #d8cdb9; }
+  .card.selected { border-color: #a8956d; box-shadow: 0 4px 24px rgba(168,149,109,0.2); }
+
+  .card-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b6860;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .card-label .badge {
+    background: #f0ede8;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    color: #a8956d;
+  }
+
+  /* Modal mockup styles */
+  .modal {
+    background: white;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  }
+  .modal-header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f3f1ed;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: #2f333b; }
+  .modal-close {
+    width: 28px; height: 28px;
+    background: #f7f6f3;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #9a9da9;
+  }
+  .modal-body { padding: 16px 20px 20px; display: grid; gap: 14px; }
+
+  /* Form field */
+  .field { display: grid; gap: 7px; }
+  .field-label { font-size: 12px; font-weight: 600; color: #686d7a; }
+  .input {
+    height: 44px;
+    border-radius: 999px;
+    background: #fbfaf7;
+    border: 1px solid #ecebe7;
+    padding: 0 16px;
+    font-size: 14px;
+    color: #2f333b;
+    display: flex; align-items: center;
+  }
+  .input.placeholder { color: #b1b1b8; }
+  .input-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; }
+
+  /* Segmented toggle */
+  .seg-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #f0ede8;
+    border-radius: 999px;
+    padding: 3px;
+    height: 44px;
+  }
+  .seg-btn {
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    color: #9a9da9;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .seg-btn.active {
+    background: white;
+    color: #2f333b;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  }
+
+  /* Currency toggle */
+  .currency-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #f0ede8;
+    border-radius: 999px;
+    padding: 3px;
+    height: 44px;
+  }
+  .cur-btn {
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    color: #9a9da9;
+  }
+  .cur-btn.active {
+    background: white;
+    color: #2f333b;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  }
+
+  /* Preview pill */
+  .preview-pill {
+    background: #f7f5ef;
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b6860;
+  }
+  .preview-pill .calc { color: #2f333b; font-weight: 600; }
+  .preview-pill .eq { color: #a8956d; font-weight: 700; margin: 0 2px; }
+  .preview-pill .result { color: #2d7f36; font-weight: 700; font-size: 14px; }
+
+  /* Dropdown */
+  .dropdown {
+    height: 44px;
+    border-radius: 999px;
+    background: #fbfaf7;
+    border: 1px solid #ecebe7;
+    padding: 0 16px;
+    font-size: 14px;
+    color: #2f333b;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dropdown .chevron { color: #b1b1b8; font-size: 12px; }
+
+  /* Submit */
+  .submit {
+    height: 48px;
+    background: #f9dde2;
+    color: #d9344f;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600;
+    margin-top: 4px;
+    box-shadow: 0 8px 20px rgba(217,52,79,0.12);
+  }
+
+  /* empty state */
+  .empty-state {
+    background: #fff8f1;
+    border: 1px solid #f0d9c4;
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #a16325;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* selection bar */
+  .sel-bar {
+    position: fixed; bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    background: #2f333b;
+    color: white;
+    border-radius: 999px;
+    padding: 10px 24px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .sel-bar.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>Percentage Amount Mode — UI Options</h1>
+<p class="subtitle">Click a layout to select it. Both show the modal in "Percentage" mode for an Add Expense.</p>
+
+<div class="layouts">
+
+  <!-- Option A: Stacked vertical layout -->
+  <div class="card" data-choice="a" onclick="pick(this)">
+    <div class="card-label">Option A <span class="badge">Stacked</span></div>
+
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Add Expense</span>
+        <div class="modal-close">✕</div>
+      </div>
+      <div class="modal-body">
+
+        <div class="field">
+          <div class="field-label">Expense name</div>
+          <div class="input">Rent</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Amount Type</div>
+          <div class="seg-toggle">
+            <div class="seg-btn">Fixed</div>
+            <div class="seg-btn active">% Percentage</div>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="field">
+            <div class="field-label">Percentage</div>
+            <div class="input">30</div>
+          </div>
+          <div class="field">
+            <div class="field-label">of</div>
+            <div class="input" style="justify-content:center;font-weight:600;font-size:13px;">%</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Based On</div>
+          <div class="dropdown">
+            <span>Total income this month</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+
+        <div class="preview-pill">
+          <span class="calc">30% of 200M T</span>
+          <span class="eq">=</span>
+          <span class="result">60M T</span>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Date</div>
+          <div class="input">Today</div>
+        </div>
+
+        <div class="submit">Add Expense</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px; font-size:12px; color:#6b6860;">
+      Toggle row comes right after the name. The percentage + "of" column layout keeps it compact. Preview appears below the source selector.
+    </div>
+  </div>
+
+  <!-- Option B: Inline row — amount field replaced -->
+  <div class="card" data-choice="b" onclick="pick(this)">
+    <div class="card-label">Option B <span class="badge">Inline</span></div>
+
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Add Expense</span>
+        <div class="modal-close">✕</div>
+      </div>
+      <div class="modal-body">
+
+        <div class="field">
+          <div class="field-label">Expense name</div>
+          <div class="input">Rent</div>
+        </div>
+
+        <!-- The existing amount row — replaced -->
+        <div class="field">
+          <div class="field-label">Amount</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="seg-toggle">
+              <div class="seg-btn">Fixed</div>
+              <div class="seg-btn active">%</div>
+            </div>
+            <div class="currency-toggle">
+              <div class="cur-btn active">TMN</div>
+              <div class="cur-btn">USD</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1.6fr; gap: 10px;">
+          <div class="field">
+            <div class="field-label">Percentage</div>
+            <div class="input">30</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Based On</div>
+            <div class="dropdown" style="font-size:13px;">
+              <span>Total income</span>
+              <span class="chevron">▼</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-pill">
+          <span class="calc">30% of 200M T</span>
+          <span class="eq">=</span>
+          <span class="result">60M T</span>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Date</div>
+          <div class="input">Today</div>
+        </div>
+
+        <div class="submit">Add Expense</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px; font-size:12px; color:#6b6860;">
+      Toggle replaces the amount field header area. Mode + currency on the same row. Percentage + source side-by-side on the next row. Feels tighter.
+    </div>
+  </div>
+
+</div>
+
+<div class="sel-bar" id="selbar">✓ Selected</div>
+
+<script>
+  function pick(el) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const bar = document.getElementById('selbar');
+    const label = el.querySelector('.card-label').textContent.trim();
+    bar.textContent = '✓ ' + label + ' selected';
+    bar.classList.add('visible');
+    // report to server
+    if (window.__recordChoice) window.__recordChoice(el.dataset.choice, label);
+    else {
+      fetch('/events', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type:'click', choice: el.dataset.choice, text: label, timestamp: Date.now()})
+      }).catch(()=>{});
+    }
+  }
+</script>
+</body>
+</html>
