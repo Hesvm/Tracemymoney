@@ -10,6 +10,7 @@ import { useMoneyMapStore } from "@/store/moneyMapStore";
 import type { Currency, GoalCategory, MoneyNodeType, RecurrenceType } from "@/types/money";
 import { AmountInput, CurrencySegmentedToggle, GoalCategoryChips, recurrenceOptions, StyledDatePicker, StyledDropdown } from "./FormControls";
 import { getHistoricalRate } from "@/lib/exchangeRates/getHistoricalRate";
+import { getBucketInflow } from "@/lib/bucketInflow";
 
 const labels: Record<MoneyNodeType, { title: string; submit: string; subject: string; amount: string }> = {
   income: { title: "Add Income", submit: "Add Income", subject: "Source", amount: "Amount" },
@@ -84,6 +85,7 @@ export function QuickAddModal({
   const updateItemFromForm = useMoneyMapStore((state) => state.updateItemFromForm);
   const items = useMoneyMapStore((state) => state.items);
   const nodes = useMoneyMapStore((state) => state.nodes);
+  const edges = useMoneyMapStore((state) => state.edges);
   const calendarSystem = useMoneyMapStore((state) => state.calendarSystem);
   const defaultCurrency = useMoneyMapStore((state) => state.settings.defaultCurrency);
   const editItem = editItemId ? items.find((item) => item.id === editItemId) : null;
@@ -102,12 +104,28 @@ export function QuickAddModal({
   const [resolvedRateHint, setResolvedRateHint] = useState<"exact" | "nearest_previous" | null>(null);
   const [manualRate, setManualRate] = useState<string>("");
   const [isRateManual, setIsRateManual] = useState(false);
+  const [inputMode, setInputMode] = useState<"fixed" | "percentage">("fixed");
+  const [percentageValue, setPercentageValue] = useState<string>("20");
   const copy = activeType ? labels[activeType] : labels.income;
 
   const parentOptions = useMemo(
     () => [{ value: "", label: "No parent" }, ...nodes.map((node) => ({ value: node.id, label: node.data.title }))],
     [nodes]
   );
+
+  const savingsNodeId = useMemo(() => {
+    if (activeType !== "savings") return null;
+    if (editItemId) {
+      return nodes.find((n) => n.data.itemIds.includes(editItemId))?.id ?? null;
+    }
+    return nodes.find((n) => n.data.type === "savings")?.id ?? null;
+  }, [activeType, editItemId, nodes]);
+
+  const bucketInflow = useMemo(() => {
+    if (!savingsNodeId) return 0;
+    const month = date.slice(0, 7); // "YYYY-MM-DD" → "YYYY-MM"
+    return getBucketInflow(savingsNodeId, nodes, edges, items, month, defaultCurrency, liveRate);
+  }, [savingsNodeId, nodes, edges, items, date, defaultCurrency, liveRate]);
 
   function resetForm() {
     setCurrency(defaultCurrency);
@@ -123,6 +141,8 @@ export function QuickAddModal({
     setManualRate("");
     setIsRateManual(false);
     setResolvedRateSource("current_api");
+    setInputMode("fixed");
+    setPercentageValue("20");
   }
 
   useEffect(() => {
@@ -142,6 +162,8 @@ export function QuickAddModal({
     setGoalCategory(editItem.category ?? "phone");
     setTitleValue(editItem.title ?? "");
     setResetKey((current) => current + 1);
+    setInputMode(editItem.inputMode ?? "fixed");
+    setPercentageValue(String(editItem.percentageValue ?? 20));
     if (editItem.amount?.exchangeRateAtEntry) {
       setManualRate(String(editItem.amount.exchangeRateAtEntry));
       setResolvedRate(editItem.amount.exchangeRateAtEntry);
@@ -185,8 +207,14 @@ export function QuickAddModal({
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
 
-    if (title && amount && activeType !== "bucket") {
-      saveAmountSuggestion(title, amount);
+    const isSavingsPercentage = activeType === "savings" && inputMode === "percentage";
+    const pct = Number(percentageValue || 0);
+    const resolvedAmount = isSavingsPercentage
+      ? Math.round((pct / 100) * bucketInflow)
+      : amount;
+
+    if (title && resolvedAmount && activeType !== "bucket") {
+      saveAmountSuggestion(title, resolvedAmount);
     }
 
     const parsedManualRate = parseFloat(manualRate.replace(/,/g, ""));
@@ -198,7 +226,7 @@ export function QuickAddModal({
     const payload = {
       type: activeType,
       title,
-      amount: activeType === "bucket" ? undefined : (activeType === "goal" ? undefined : amount),
+      amount: activeType === "bucket" || activeType === "goal" ? undefined : resolvedAmount,
       targetAmount: activeType === "goal" ? amount : undefined,
       currency,
       date,
@@ -208,6 +236,11 @@ export function QuickAddModal({
       category: activeType === "goal" ? goalCategory : undefined,
       rateOverride: effectiveRate,
       rateSource: effectiveRateSource,
+      inputMode: isSavingsPercentage ? ("percentage" as const) : ("fixed" as const),
+      percentageValue: isSavingsPercentage ? pct : undefined,
+      baseAmountSnapshot: isSavingsPercentage ? bucketInflow : undefined,
+      percentageBaseType: isSavingsPercentage ? ("bucket_inflow" as const) : undefined,
+      percentageBaseNodeId: isSavingsPercentage ? (savingsNodeId ?? undefined) : undefined,
     };
 
     if (editItemId) {
@@ -275,27 +308,93 @@ export function QuickAddModal({
 
                 {activeType !== "bucket" && (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_176px] gap-3">
-                      <Field label={copy.amount}>
-                        <AmountInput
-                          currency={currency}
-                          value={amount}
-                          onValueChange={setAmount}
-                          resetKey={resetKey}
-                        />
+                    {/* Fixed / Percentage toggle — savings only */}
+                    {activeType === "savings" && (
+                      <Field label="Amount Type">
+                        <div className="grid h-12 grid-cols-2 rounded-full bg-[#fbfaf7] p-1 shadow-[inset_0_0_0_1px_#ecebe7]">
+                          {(["fixed", "percentage"] as const).map((mode) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              className={`rounded-full px-2 text-[13px] font-semibold transition ${
+                                inputMode === mode
+                                  ? "bg-white text-[#2f333b] shadow-[0_8px_18px_rgba(91,82,65,0.12)]"
+                                  : "text-[#8c90a0] hover:text-[#626677]"
+                              }`}
+                              onClick={() => setInputMode(mode)}
+                            >
+                              {mode === "fixed" ? "Fixed" : "Percentage"}
+                            </button>
+                          ))}
+                        </div>
                       </Field>
-                      <Field label="Currency">
-                        <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
-                      </Field>
-                    </div>
-                    <SuggestionChips
-                      title={titleValue}
-                      currency={currency}
-                      onSelect={(v) => {
-                        setAmount(v);
-                        setResetKey((k) => k + 1);
-                      }}
-                    />
+                    )}
+
+                    {/* Fixed amount input */}
+                    {(activeType !== "savings" || inputMode === "fixed") && (
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_176px] gap-3">
+                        <Field label={copy.amount}>
+                          <AmountInput
+                            currency={currency}
+                            value={amount}
+                            onValueChange={setAmount}
+                            resetKey={resetKey}
+                          />
+                        </Field>
+                        <Field label="Currency">
+                          <CurrencySegmentedToggle value={currency} onChange={setCurrency} />
+                        </Field>
+                      </div>
+                    )}
+
+                    {/* Percentage mode fields */}
+                    {activeType === "savings" && inputMode === "percentage" && (
+                      <>
+                        <Field label="Percentage">
+                          <input
+                            className={inputClass}
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="20"
+                            value={percentageValue}
+                            onChange={(e) => setPercentageValue(e.target.value.replace(/[^\d]/g, ""))}
+                          />
+                        </Field>
+                        <div className="grid gap-1 px-1">
+                          <span className="text-[12px] font-medium text-[#686d7a]">Based on</span>
+                          <span className="text-[13px] text-[#2f333b]">Total incoming to Savings this month</span>
+                        </div>
+                        {bucketInflow > 0 ? (
+                          <div className="rounded-2xl bg-[#f4f2ec] px-4 py-3">
+                            <span className="text-[13px] font-medium text-[#686d7a]">Preview </span>
+                            <span className="text-[13px] font-semibold text-[#2f333b]">
+                              {percentageValue || "0"}% of {formatPrimaryAmount({ amount: bucketInflow, currency: defaultCurrency })} ={" "}
+                              {formatPrimaryAmount({
+                                amount: Math.round((Number(percentageValue || 0) / 100) * bucketInflow),
+                                currency: defaultCurrency,
+                              })}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl bg-[#fff4ec] px-4 py-3">
+                            <span className="text-[12px] text-[#b07030]">
+                              No incoming money to this Savings node this month. Add or connect income first.
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {(activeType !== "savings" || inputMode === "fixed") && (
+                      <SuggestionChips
+                        title={titleValue}
+                        currency={currency}
+                        onSelect={(v) => {
+                          setAmount(v);
+                          setResetKey((k) => k + 1);
+                        }}
+                      />
+                    )}
                   </>
                 )}
 
@@ -367,7 +466,8 @@ export function QuickAddModal({
             <div className="shrink-0 px-4 pt-2 pb-4 sm:px-6 sm:pt-3 sm:pb-6">
               <button
                 type="submit"
-                className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] ${submitButtonClass(activeType)}`}
+                disabled={activeType === "savings" && inputMode === "percentage" && bucketInflow === 0}
+                className={`h-13 w-full rounded-full px-5 py-3.5 text-[16px] font-semibold transition active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed ${submitButtonClass(activeType)}`}
               >
                 {editItemId ? copy.submit.replace("Add", "Save") : copy.submit}
               </button>
