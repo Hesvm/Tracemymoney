@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BarChart3, ChevronLeft, ChevronRight, Plus, Search, Settings } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { formatMonthLabel } from "@/lib/months";
 import { useMoneyMapStore } from "@/store/moneyMapStore";
 
@@ -27,15 +27,11 @@ const DockButton = React.forwardRef<HTMLButtonElement, {
 export function BottomNav({
   onAddClick,
   onAnalyticsClick,
-  onSettingsClick,
-  onSearchClick,
   analyticsOpen,
   addButtonRef
 }: {
   onAddClick: () => void;
   onAnalyticsClick: () => void;
-  onSettingsClick: () => void;
-  onSearchClick: () => void;
   analyticsOpen?: boolean;
   addButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
@@ -67,12 +63,6 @@ export function BottomNav({
       </div>
       <DockButton label="Analytics" onClick={onAnalyticsClick} className={analyticsOpen ? "bg-[#f3f0e9] text-[#626677]" : ""}>
         <BarChart3 className="size-5" strokeWidth={2.1} />
-      </DockButton>
-      <DockButton label="Settings" onClick={onSettingsClick} className="hidden sm:grid">
-        <Settings className="size-5" strokeWidth={2.1} />
-      </DockButton>
-      <DockButton label="Search" onClick={onSearchClick} className="hidden sm:grid">
-        <Search className="size-5" strokeWidth={2.1} />
       </DockButton>
     </nav>
   );

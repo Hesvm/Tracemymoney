@@ -196,8 +196,6 @@ export function MoneyMapApp() {
         addButtonRef={addButtonRef}
         onAddClick={handleAddClick}
         onAnalyticsClick={() => setAnalyticsOpen((open) => !open)}
-        onSettingsClick={() => setSettingsOpen(true)}
-        onSearchClick={() => setSearchOpen(true)}
         analyticsOpen={analyticsOpen}
       />
       {contextMenu.target?.type === "node" && (
