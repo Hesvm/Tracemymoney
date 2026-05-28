@@ -15,6 +15,7 @@ import { useMoneyMapStore } from "@/store/moneyMapStore";
 import { EmptyNodeAction } from "@/components/canvas/EmptyNodeAction";
 import { NodeTotalChip } from "@/components/canvas/NodeTotalChip";
 import { getNodeMonthlyTotal } from "@/lib/nodeTotals";
+import { calculateBucketPercentages } from "@/lib/calculateBucketPercentages";
 import type { MoneyFlowNode, MoneyItem, MoneyNodeType } from "@/types/money";
 
 const nodeStyles: Record<MoneyNodeType, { pill: string; iconBg: string; icon: React.ElementType }> = {
@@ -57,13 +58,15 @@ function MoneyRow({
   nodeId,
   calendarSystem,
   animatedRate,
-  rateTick
+  rateTick,
+  bucketPct,
 }: {
   item: MoneyItem;
   nodeId: string;
   calendarSystem: "shamsi" | "gregorian";
   animatedRate: number | null;
   rateTick: number;
+  bucketPct?: number;
 }) {
   const primary = formatPrimaryAmount(item.amount);
   const title = item.title ? ` :: ${item.title}` : "";
@@ -116,12 +119,17 @@ function MoneyRow({
         ) : (
           formatShortDate(item.date, calendarSystem)
         )}
+        {bucketPct !== undefined && bucketPct > 0 && (
+          <div className="mt-0.5 tabular-nums" style={{ opacity: 0.55 }}>
+            {bucketPct < 1 ? "<1%" : `${Math.round(bucketPct)}%`}
+          </div>
+        )}
       </div>
     </motion.li>
   );
 }
 
-function GoalRow({ item, nodeId }: { item: MoneyItem; nodeId: string }) {
+function GoalRow({ item, nodeId, bucketPct }: { item: MoneyItem; nodeId: string; bucketPct?: number }) {
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
   const isMobile = useMobile();
   const itemLongPress = useLongPress(
@@ -159,6 +167,11 @@ function GoalRow({ item, nodeId }: { item: MoneyItem; nodeId: string }) {
           <div className="mt-2 text-[13px] font-medium text-[#8d919e]">
             {formatPrimaryAmount(targetAmt)}
           </div>
+          {bucketPct !== undefined && bucketPct > 0 && (
+            <div className="mt-0.5 text-[10px] tabular-nums text-[#868b9b]" style={{ opacity: 0.55 }}>
+              {bucketPct < 1 ? "<1%" : `${Math.round(bucketPct)}%`}
+            </div>
+          )}
         </div>
 
         <div className="relative grid size-14 place-items-center">
@@ -242,6 +255,11 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
     [data.itemIds, items, selectedMonth, secondaryCurrency, usdToToman]
   );
 
+  const bucketPercentages = useMemo(
+    () => calculateBucketPercentages(data.itemIds, items, selectedMonth, defaultCurrency, usdToToman),
+    [data.itemIds, items, selectedMonth, defaultCurrency, usdToToman]
+  );
+
   const { displayed: animatedRate, ticked: rateTick } = useAnimatedRate(liveRate);
   const isMobile = useMobile();
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
@@ -316,7 +334,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
             ) : nodeItems.length > 0 ? (
               nodeItems.map((item) =>
                 data.type === "goal" ? (
-                  <GoalRow key={item.id} item={item} nodeId={id} />
+                  <GoalRow key={item.id} item={item} nodeId={id} bucketPct={bucketPercentages[item.id]} />
                 ) : (
                   <MoneyRow
                     key={item.id}
@@ -325,6 +343,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
                     calendarSystem={calendarSystem}
                     animatedRate={animatedRate}
                     rateTick={rateTick}
+                    bucketPct={bucketPercentages[item.id]}
                   />
                 )
               )
