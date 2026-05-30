@@ -280,7 +280,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
 
   return (
     <article
-      className={`money-node group w-[200px] md:w-[430px] rounded-[20px] md:rounded-[28px] bg-white/95 px-3 pb-4 pt-3 md:px-5 md:pb-6 md:pt-5 shadow-soft backdrop-blur transition ${
+      className={`money-node group w-[max(240px,80vw)] md:w-[430px] rounded-[20px] md:rounded-[28px] bg-white/95 px-3 pb-4 pt-3 md:px-5 md:pb-6 md:pt-5 shadow-soft backdrop-blur transition ${
         isFocused ? "ring-4 ring-[#d8cdb9]/70" : ""
       } ${selected ? "money-node-selected" : ""}`}
       onMouseEnter={() => setIsHovering(true)}
