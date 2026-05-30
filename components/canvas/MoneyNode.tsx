@@ -119,7 +119,7 @@ function MoneyRow({
         ) : (
           formatShortDate(item.date, calendarSystem)
         )}
-        {bucketPct !== undefined && bucketPct > 0 && (
+        {bucketPct !== undefined && bucketPct > 0 && item.type === "savings" && item.inputMode === "percentage" && (
           <div className="mt-0.5 tabular-nums" style={{ opacity: 0.55 }}>
             {bucketPct < 1 ? "<1%" : `${Math.round(bucketPct)}%`}
           </div>
