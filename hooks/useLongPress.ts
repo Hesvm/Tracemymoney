@@ -3,13 +3,14 @@ import { useCallback, useRef } from "react";
 interface UseLongPressOptions {
   delay?: number;
   moveThreshold?: number;
+  stopPropagation?: boolean;
 }
 
 export function useLongPress(
   onLongPress: (clientX: number, clientY: number) => void,
   options: UseLongPressOptions = {}
 ) {
-  const { delay = 420, moveThreshold = 8 } = options;
+  const { delay = 420, moveThreshold = 8, stopPropagation = false } = options;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const fired = useRef(false);
@@ -25,6 +26,7 @@ export function useLongPress(
 
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
+      if (stopPropagation) e.stopPropagation();
       const touch = e.touches[0];
       startPos.current = { x: touch.clientX, y: touch.clientY };
       fired.current = false;
@@ -36,7 +38,7 @@ export function useLongPress(
         timerRef.current = null;
       }, delay);
     },
-    [delay, onLongPress]
+    [delay, onLongPress, stopPropagation]
   );
 
   const onTouchMove = useCallback(

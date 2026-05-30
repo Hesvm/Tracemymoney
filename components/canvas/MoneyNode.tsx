@@ -75,7 +75,7 @@ function MoneyRow({
   const isMobile = useMobile();
   const itemLongPress = useLongPress(
     (x, y) => openContextMenu(x, y, { type: "item", nodeId, itemId: item.id }),
-    { delay: 420 }
+    { delay: 420, stopPropagation: true }
   );
 
   return (
@@ -134,7 +134,7 @@ function GoalRow({ item, nodeId, bucketPct }: { item: MoneyItem; nodeId: string;
   const isMobile = useMobile();
   const itemLongPress = useLongPress(
     (x, y) => openContextMenu(x, y, { type: "item", nodeId, itemId: item.id }),
-    { delay: 420 }
+    { delay: 420, stopPropagation: true }
   );
   const category = item.category ?? "other";
   const targetAmt = item.targetAmount ?? item.amount;
@@ -281,7 +281,6 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       } ${selected ? "money-node-selected" : ""}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      {...(isMobile ? nodeLongPress : {})}
       style={{
         "--handle-opacity": isHovering || selected ? 1 : 0
       } as React.CSSProperties}
@@ -303,7 +302,10 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
       <NodeHandle position={Position.Bottom} />
       <NodeHandle position={Position.Left} />
 
-      <div className="mb-3 md:mb-6 flex items-center justify-between gap-2">
+      <div
+        className="mb-3 md:mb-6 flex items-center justify-between gap-2"
+        {...(isMobile ? nodeLongPress : {})}
+      >
         <NodeBadge type={data.type} title={data.title} />
         <div className="flex items-center gap-1.5 shrink-0">
           <NodeTotalChip
