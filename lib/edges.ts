@@ -11,10 +11,17 @@ export function decorateEdge(edge: MoneyFlowEdge): MoneyFlowEdge {
   };
 }
 
-export function createEdge(source: string, target: string): MoneyFlowEdge {
+export function createEdge(
+  source: string,
+  target: string,
+  sourceHandle = "right-source",
+  targetHandle = "left-target"
+): MoneyFlowEdge {
   return decorateEdge({
     id: `edge-${source}-${target}`,
     source,
     target,
+    sourceHandle,
+    targetHandle,
   });
 }

@@ -77,7 +77,12 @@ function CanvasInner() {
       );
       if (isDuplicate) return;
 
-      addEdge(connection.source, connection.target);
+      addEdge(
+        connection.source,
+        connection.target,
+        connection.sourceHandle ?? "right-source",
+        connection.targetHandle ?? "left-target"
+      );
     },
     [edges, addEdge]
   );

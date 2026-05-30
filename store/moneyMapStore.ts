@@ -89,7 +89,7 @@ type MoneyMapStore = {
   updateSettings: (settings: Partial<AppSettings>) => void;
   fetchExchangeRate: () => Promise<void>;
   resetLocalData: () => void;
-  addEdge: (source: string, target: string) => void;
+  addEdge: (source: string, target: string, sourceHandle?: string, targetHandle?: string) => void;
   deleteEdge: (edgeId: string) => void;
   setSelectedEdgeId: (edgeId: string | null) => void;
   focusNode: (nodeId: string | null) => void;
@@ -436,12 +436,12 @@ export const useMoneyMapStore = create<MoneyMapStore>()(
       }));
     },
 
-    addEdge: (source, target) => {
+    addEdge: (source, target, sourceHandle = "right-source", targetHandle = "left-target") => {
       set((state) => ({
         lastModifiedAt: new Date().toISOString(),
         edges: [
           ...state.edges,
-          decorateEdge({ id: `edge-${source}-${target}-${Date.now()}`, source, target }),
+          createEdge(source, target, sourceHandle, targetHandle),
         ],
         selectedEdgeId: null,
       }));
