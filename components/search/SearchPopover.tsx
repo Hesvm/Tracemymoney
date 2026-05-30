@@ -13,8 +13,12 @@ export function SearchPopover({ open, onClose }: { open: boolean; onClose: () =>
   const inputRef = useRef<HTMLInputElement>(null);
   const nodes = useMoneyMapStore((state) => state.nodes);
   const items = useMoneyMapStore((state) => state.items);
+  const selectedMonth = useMoneyMapStore((state) => state.selectedMonth);
   const focusNode = useMoneyMapStore((state) => state.focusNode);
-  const results = useMemo(() => searchMoneyMap({ query, nodes, items }), [items, nodes, query]);
+  const results = useMemo(
+    () => searchMoneyMap({ query, nodes, items, selectedMonth }),
+    [items, nodes, query, selectedMonth]
+  );
   const activeResult = results[Math.min(activeIndex, Math.max(results.length - 1, 0))];
 
   useEffect(() => {

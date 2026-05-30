@@ -69,6 +69,7 @@ const results = searchMoneyMap({
   query: "rent",
   nodes: fixtureNodes,
   items: fixtureItems,
+  selectedMonth: "2026-05",
 });
 
 if (!results.some((result) => result.label.includes("Rent") && result.nodeId === "node-expense")) {
@@ -79,8 +80,100 @@ const nodeResults = searchMoneyMap({
   query: "income",
   nodes: fixtureNodes,
   items: fixtureItems,
+  selectedMonth: "2026-05",
 });
 
 if (!nodeResults.some((result) => result.type === "node" && result.nodeId === "node-income")) {
   throw new Error("search should find node titles");
 }
+
+// --- month-scoped search ---
+
+const futureItem: MoneyItem = {
+  id: "item-future",
+  title: "FutureBonus",
+  type: "income",
+  amount: { amount: 1000, currency: "USD" },
+  date: "2026-07-01",
+  recurrence: "none",
+  createdAt: "",
+  updatedAt: "",
+};
+const futureNode: MoneyFlowNode = {
+  id: "node-future",
+  type: "moneyNode",
+  position: { x: 0, y: 0 },
+  data: { type: "income", title: "Income", itemIds: ["item-future"] },
+};
+
+// Item from a different month must NOT appear when viewing May
+const scopedResults = searchMoneyMap({
+  query: "futurebonus",
+  nodes: [futureNode],
+  items: [futureItem],
+  selectedMonth: "2026-05",
+});
+if (scopedResults.length !== 0)
+  throw new Error("item from a different month must not appear in scoped search");
+
+// Item in selectedMonth must still appear
+const mayItem: MoneyItem = {
+  id: "item-may",
+  title: "MayBonus",
+  type: "income",
+  amount: { amount: 500, currency: "USD" },
+  date: "2026-05-15",
+  recurrence: "none",
+  createdAt: "",
+  updatedAt: "",
+};
+const scopedResults2 = searchMoneyMap({
+  query: "maybonus",
+  nodes: [{ ...futureNode, data: { ...futureNode.data, itemIds: ["item-may"] } }],
+  items: [mayItem],
+  selectedMonth: "2026-05",
+});
+if (scopedResults2.length !== 1)
+  throw new Error("item in selected month must appear in scoped search");
+
+// Recurring item starting before selectedMonth must still appear
+const recurringItem: MoneyItem = {
+  id: "item-recurring",
+  title: "RecurringBonus",
+  type: "income",
+  amount: { amount: 200, currency: "USD" },
+  date: "2026-03-01",
+  recurrence: "monthly",
+  createdAt: "",
+  updatedAt: "",
+};
+const recurringResults = searchMoneyMap({
+  query: "recurringbonus",
+  nodes: [{ ...futureNode, data: { ...futureNode.data, itemIds: ["item-recurring"] } }],
+  items: [recurringItem],
+  selectedMonth: "2026-05",
+});
+if (recurringResults.length !== 1)
+  throw new Error("recurring item visible in selectedMonth must appear in search");
+
+// Non-recurring item from PAST month must NOT appear
+const pastItem: MoneyItem = {
+  id: "item-past",
+  title: "PastBonus",
+  type: "income",
+  amount: { amount: 300, currency: "USD" },
+  date: "2026-03-15",
+  recurrence: "none",
+  createdAt: "",
+  updatedAt: "",
+};
+const pastResults = searchMoneyMap({
+  query: "pastbonus",
+  nodes: [{ ...futureNode, data: { ...futureNode.data, itemIds: ["item-past"] } }],
+  items: [pastItem],
+  selectedMonth: "2026-05",
+});
+if (pastResults.length !== 0)
+  throw new Error("non-recurring item from past month must not appear in current month search");
+
+console.log("monthSearch: all tests passed ✓");

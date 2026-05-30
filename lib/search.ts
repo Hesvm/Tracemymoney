@@ -1,3 +1,4 @@
+import { isItemInMonth } from "@/lib/months";
 import { formatConvertedAmount, formatPrimaryAmount } from "@/lib/formatters";
 import type { MoneyFlowNode, MoneyItem } from "@/types/money";
 
@@ -31,11 +32,13 @@ function itemSearchText(item: MoneyItem) {
 export function searchMoneyMap({
   query,
   nodes,
-  items
+  items,
+  selectedMonth,
 }: {
   query: string;
   nodes: MoneyFlowNode[];
   items: MoneyItem[];
+  selectedMonth: string;
 }): SearchResult[] {
   const normalizedQuery = normalize(query);
   if (!normalizedQuery) return [];
@@ -56,6 +59,7 @@ export function searchMoneyMap({
     for (const itemId of node.data.itemIds) {
       const item = items.find((candidate) => candidate.id === itemId);
       if (!item) continue;
+      if (!isItemInMonth(item, selectedMonth)) continue;
       const haystack = normalize(itemSearchText(item));
       if (!haystack.includes(normalizedQuery)) continue;
 
