@@ -64,7 +64,7 @@ function MoneyRow({
   item: MoneyItem;
   nodeId: string;
   calendarSystem: "shamsi" | "gregorian";
-  animatedRate: number | null;
+  animatedRate: number;
   rateTick: number;
   bucketPct?: number;
 }) {
@@ -261,6 +261,10 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
   );
 
   const { displayed: animatedRate, ticked: rateTick } = useAnimatedRate(liveRate);
+  // Fall back to stored rate (or a known constant) so savings items always show
+  // the USD converted amount even before the live rate API responds.
+  const FALLBACK_RATE = 94_382;
+  const effectiveDisplayRate = animatedRate ?? usdToToman ?? FALLBACK_RATE;
   const isMobile = useMobile();
   const openContextMenu = useMoneyMapStore((state) => state.openContextMenu);
   const nodeLongPress = useLongPress(
@@ -343,7 +347,7 @@ export function MoneyNode(props: NodeProps<MoneyFlowNode>) {
                     item={item}
                     nodeId={id}
                     calendarSystem={calendarSystem}
-                    animatedRate={animatedRate}
+                    animatedRate={effectiveDisplayRate}
                     rateTick={rateTick}
                     bucketPct={bucketPercentages[item.id]}
                   />
