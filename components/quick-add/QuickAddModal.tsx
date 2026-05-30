@@ -99,6 +99,7 @@ export function QuickAddModal({
   const [titleValue, setTitleValue] = useState("");
   const [resetKey, setResetKey] = useState(0);
   const liveRate = useMoneyMapStore((state) => state.exchangeRate.usdToToman);
+  const selectedMonth = useMoneyMapStore((state) => state.selectedMonth);
   const [resolvedRate, setResolvedRate] = useState<number | null>(null);
   const [resolvedRateSource, setResolvedRateSource] = useState<"historical_cache" | "current_api" | "manual">("current_api");
   const [resolvedRateHint, setResolvedRateHint] = useState<"exact" | "nearest_previous" | null>(null);
@@ -107,6 +108,9 @@ export function QuickAddModal({
   const [inputMode, setInputMode] = useState<"fixed" | "percentage">("fixed");
   const [percentageValue, setPercentageValue] = useState<string>("20");
   const copy = activeType ? labels[activeType] : labels.income;
+
+  // Show the Fixed/Percentage toggle only when: new item, or editing an existing percentage item
+  const showModeToggle = activeType === "savings" && (!editItemId || inputMode === "percentage");
 
   const parentOptions = useMemo(
     () => [{ value: "", label: "No parent" }, ...nodes.map((node) => ({ value: node.id, label: node.data.title }))],
@@ -123,9 +127,8 @@ export function QuickAddModal({
 
   const bucketInflow = useMemo(() => {
     if (!savingsNodeId) return 0;
-    const month = date.slice(0, 7); // "YYYY-MM-DD" → "YYYY-MM"
-    return getBucketInflow(savingsNodeId, nodes, edges, items, month, defaultCurrency, liveRate);
-  }, [savingsNodeId, nodes, edges, items, date, defaultCurrency, liveRate]);
+    return getBucketInflow(savingsNodeId, nodes, edges, items, selectedMonth, defaultCurrency, liveRate);
+  }, [savingsNodeId, nodes, edges, items, selectedMonth, defaultCurrency, liveRate]);
 
   function resetForm() {
     setCurrency(defaultCurrency);
@@ -308,8 +311,8 @@ export function QuickAddModal({
 
                 {activeType !== "bucket" && (
                   <>
-                    {/* Fixed / Percentage toggle — savings only */}
-                    {activeType === "savings" && (
+                    {/* Fixed / Percentage toggle — new savings items or existing percentage items only */}
+                    {showModeToggle && (
                       <Field label="Amount Type">
                         <div className="grid h-12 grid-cols-2 rounded-full bg-[#fbfaf7] p-1 shadow-[inset_0_0_0_1px_#ecebe7]">
                           {(["fixed", "percentage"] as const).map((mode) => (
